@@ -3,7 +3,7 @@
 		var name = getUrlVars()["name"];
 		name = decodeURIComponent(name);
 		loadThirdPartyData(uri,name);
-		loadIndicators(uri, name);
+		//loadIndicators(uri, name);
 	});
 	
 	function getUrlVars() {
@@ -69,24 +69,30 @@
 			//displayDBData(region);
 			}
 		});
+		
 	}
 	
-	
-	function buildCensusQuery (uri) {
-		var sparql = " SELECT distinct ?loc ?web ?img ?map " +
+	// In the end we have to choose a particular observation that has the population of the country
+	// so, we will use, by the moment, the one has city|county/total 
+	function buildCensusQuery (uri,name) {
+		index = name.indexOf("County");
+		name = name.substring(index+7); 
+	    name = name.toLowerCase();
+		var sparql = " PREFIX qb: <http://purl.org/linked-data/cube#> " +
+					 " PREFIX property: <http://stats.data-gov.ie/property/>  " +
+					 " SELECT ?o ?pop " +
 					 " WHERE { " +
-					 " ?loc a <http://dbpedia.org/ontology/Settlement> . " +
-					 " ?loc <http://purl.org/dc/terms/subject> <http://dbpedia.org/resource/Category:Counties_of_the_Republic_of_Ireland> . " +
-					 " ?loc <http://dbpedia.org/property/web> ?web . " +
-					 " ?loc <http://dbpedia.org/ontology/thumbnail> ?img . " +
-					 " ?loc <http://dbpedia.org/property/mapImage> ?map . " +
-					 " ?loc <http://www.w3.org/2000/01/rdf-schema#label> ?label . " +
-					 " FILTER(REGEX(?label, \"" + county + "\" )) . " +
+					 " ?o a qb:Observation . " + 
+					 " ?o property:geoArea <" + uri + "> . " +
+					 " ?o property:population ?pop . " +
+					 " FILTER(REGEX(STR(?o),\"" + name +"/total\")) . " +
 					 " } ";
+		console.log(sparql);
+		return sparql;
 	}	
 
 	function loadCensusData(uri,name) {
-		var sparql = buildCensusQuery(uri);
+		var sparql = buildCensusQuery(uri,name);
 		_URIbase = "http://data-gov.ie/sparql?query=";
 		console.log(sparql);
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
@@ -97,12 +103,10 @@
 			var regions = [];
 			for(i in rows) {
 				var row = rows[i];
-				region.name = row.loc.value;
-				region.web = row.web.value;
-				region.img = row.img.value;
+				region.population = row.pop.value;
 				regions[i] = region; 
 			}
-			//displayDBData(region);
+			//displayCensusData(region);
 			}
 		});
 	}
@@ -112,9 +116,6 @@
 		loadDBpediaData(uri, name);
 		loadCensusData(uri,name);
 	}
-	
-	
-	
 	
 	function loadIndicators(resourceUri,resourceName) {
 		_URIbase = "http://localhost:8890/sparql?query=";
