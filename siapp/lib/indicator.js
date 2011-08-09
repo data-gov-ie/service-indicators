@@ -1,9 +1,34 @@
+	var locationName;
+	var locationURI;
+	
+	var indicatorYear = "<http://reference.data.gov.uk/id/year/2009>";
+	
+	var properties = [];
+	
+	var indicators = [];
+	var topIndicators = [];
+	var bottomIndicators = [];
+	
+	var positions = [];
+	
 	$(document).ready(function() {
+	  //  google.load('visualization', '1',
+        //{'packages': ['table', 'map', 'corechart']});
+		  
 		var uri = getUrlVars()["uri"];
 		var name = getUrlVars()["name"];
+		locationURI = uri;
 		name = decodeURIComponent(name);
-		loadThirdPartyData(uri,name);
-		//loadIndicators(uri, name);
+		locationName = name;
+		
+		//loadThirdPartyData(uri,name);
+		
+		loadProperties(locationURI,locationName,positions);
+		
+		//loadDataSets(uri, name);
+		
+		$("#location-title-holder").html(locationName);
+		$("#location-main-holder").html("<a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a>");
 	});
 	
 	function getUrlVars() {
@@ -18,13 +43,15 @@
 		return vars;
 	}
 	
+	/*
+	
 	function buildDBPediaQuery (name) {
 		index = name.indexOf("City");
 		var sparql;
 		if (index==-1) {//it is a county
 		    index = name.indexOf("County");
 			var county = name.substring(index+7); 
-			sparql = " SELECT distinct ?loc ?web ?img ?map " +
+			sparql = " SELECT distinct ?loc ?web ?img ?map " + //+?area " +
 					 " WHERE { " +
 					 " ?loc a <http://dbpedia.org/ontology/Settlement> . " +
 					 " ?loc <http://purl.org/dc/terms/subject> <http://dbpedia.org/resource/Category:Counties_of_the_Republic_of_Ireland> . " +
@@ -32,6 +59,7 @@
 					 " ?loc <http://dbpedia.org/ontology/thumbnail> ?img . " +
 					 " ?loc <http://dbpedia.org/property/mapImage> ?map . " +
 					 " ?loc <http://www.w3.org/2000/01/rdf-schema#label> ?label . " +
+					 //" ?loc <http://dbpedia.org/property/areaKm> ?area . " +
 					 " FILTER(REGEX(?label, \"" + county + "\" )) . " +
 					 " } ";
 		}
@@ -52,6 +80,7 @@
 	
 	function loadDBpediaData(uri,name) {
 		var sparql = buildDBPediaQuery(name);
+		console.log(sparql);
 		_URIbase = "http://dbpedia.org/sparql?query=";
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
 		var region = new Object;
@@ -63,17 +92,28 @@
 				var row = rows[i];
 				region.name = row.loc.value;
 				region.web = row.web.value;
+				if (region.web.indexOf("http")==-1)
+					region.web ="http://"+region.web;
 				region.img = row.img.value;
+				//region.area = row.area.value;
 				regions[i] = region; 
 			}
-			//displayDBData(region);
+			displayDBpediaData(region);
 			}
 		});
-		
+	}
+	*/
+	function displayDBpediaData(region) {
+		/*var area = region.area;
+		if (area=='undefined') {
+			area = '<br>Area in km. ' + area;
+		}*/
+		$("#dbpedia-content-holder").html("<a href=\""+region.name+"\" target='_blank'>" + locationName + "</a><br>" + "<img src=\"" + region.img + "\"><br><a href=\""+region.web+"\" target=\"_blank\">" + region.web +"</a>"); //  + area );
 	}
 	
 	// In the end we have to choose a particular observation that has the population of the country
 	// so, we will use, by the moment, the one has city|county/total 
+	/*
 	function buildCensusQuery (uri,name) {
 		index = name.indexOf("County");
 		name = name.substring(index+7); 
@@ -86,8 +126,7 @@
 					 " ?o property:geoArea <" + uri + "> . " +
 					 " ?o property:population ?pop . " +
 					 " FILTER(REGEX(STR(?o),\"" + name +"/total\")) . " +
-					 " } ";
-		console.log(sparql);
+					 " } LIMIT 10";
 		return sparql;
 	}	
 
@@ -106,18 +145,25 @@
 				region.population = row.pop.value;
 				regions[i] = region; 
 			}
-			//displayCensusData(region);
+			
+			displayCensusData(region);
+			
 			}
 		});
 	}
 
+	function displayCensusData(region) {
+		$("#census-content-holder").html("Population " + region.population );
+	}
 	
 	function loadThirdPartyData(uri, name) {
 		loadDBpediaData(uri, name);
-		loadCensusData(uri,name);
+		//loadCensusData(uri,name);
 	}
+	*/
 	
-	function loadIndicators(resourceUri,resourceName) {
+	/*
+	function loadDataSets(resourceUri,resourceName) {
 		_URIbase = "http://localhost:8890/sparql?query=";
 		_offsetActual = 0;
 		_resourceUriActual = resourceUri;
@@ -133,20 +179,12 @@
 		// Generate the SPARQL request for retrieving the properties of 
 		// the specified location, i.e., indicators.  
 			
-		var sparql = " PREFIX scv: <http://purl.org/NET/scovo#>  " +
-					 " SELECT ?uri ?plabel ?alabel ?val ?year " +
+		var sparql = " PREFIX data: <http://stats.data-gov.ie/data/>  " +
+					 " PREFIX qb: <http://purl.org/linked-data/cube#>  " +
+					 " SELECT ?ds " +
 					 " WHERE { " +
-					 " ?uri scv:dimension <" + resourceUri + "> . " +
-					 " ?uri    rdfs:label ?label . " +
-					 " ?uri      rdf:value ?val . " +
-					 " ?uri      scv:dimension ?ind . " +
-					 " ?ind a <http://www.w3.org/2004/02/skos/core#Concept> . " +
-					 " ?ind     <http://www.w3.org/2004/02/skos/core#prefLabel> ?plabel ." +
-					 " ?ind     <http://www.w3.org/2004/02/skos/core#altLabel> ?alabel . " +
-					 " ?uri scv:dimension ?y . " +
-					 " ?y a <http://data-gov.ie/ontology/Year> . " +
-					 " ?y    <http://data-gov.ie/ontology/name> ?year . " +
-					 "} ORDER BY ?ind";
+					 " ?ds a qb:DataSet " +
+					 "} ORDER BY ?ds ";
 		
 		
 		// baseURI for executing the sparql query. 
@@ -165,15 +203,19 @@
 					json.results.bindings && 
 					json.results.bindings.length > 0) {
 					var bindings = json.results.bindings;
-					_indicators_2009 = parseBindingsByYear(bindings,'2009');
-					_indicators_2010 = parseBindingsByYear(bindings,'2010');
-					//alert(bindings);
+					var datasets = [];
+					
+					for (var i=0; i<bindings.length; i++) {
+						var row = bindings[i];
+						var dataset = new Object;
+						dataset.uri = row.ds.value;
+						datasets[i] = dataset;
+					}
 
 					// render the manifestation table
 					$('#content-holder').html("");
-					//displayIndicators();
-					
-					displayChartIndicators();
+										
+					displayDataSets(datasets);
 					
 
 				} 
@@ -182,99 +224,261 @@
 				// resource, display an error message.  
 				else {
 					$('#name_loading').html("");
-					var html = "<div id='missing'>No indicators were found for  " + resourceName + "<\/div>";
+					var html = "<div id='missing'>No datasets were found <\/div>";
 					$("#content-holder").html(html);
 				}
 			}
 		});
 	}
+	*/
+	
+	function loadProperties() {
+		_URIbase = "http://localhost:8890/sparql?query=";
+		
+		// Generate the SPARQL request for retrieving the properties of 
+		// the specified location, i.e., indicators.  
+			
+		var sparql = " PREFIX qb: <http://purl.org/linked-data/cube#>  " +
+					 " SELECT ?uri ?label" +
+					 " WHERE { " +
+					 " ?uri a qb:MeasureProperty ." +
+					 " ?uri <http://www.w3.org/2000/01/rdf-schema#label> ?label ." +
+					 "} ORDER BY ?uri ";
+					 
+		
+		
+		// baseURI for executing the sparql query. 
+		var Url = _URIbase + escape(sparql) + "&format=json";
 
-
-	function loadResources() {
-		var _resourceType_County = "http://geo.data-gov.ie/AdministrativeCounty";
-		var _resourceType_City = "http://geo.data-gov.ie/City";			
-		var _nameProperty = "http://www.w3.org/2000/01/rdf-schema#label";
-
-		var sparql =
-					"SELECT ?uri ?label WHERE { " +
-						"?uri <http://www.w3.org/2004/02/skos/core#inScheme> <http://stats.data-gov.ie/codelist/geo/top-level> . ?uri <http://www.w3.org/2004/02/skos/core#prefLabel> ?label . " +
-						" { ?uri a <" + _resourceType_County + "> } UNION { ?uri a <" + _resourceType_City + "> } } ORDER BY ?uri ";
-
-		var _URIbase = "http://data-gov.ie/sparql?query=";
-
-		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
-
-		$.getJSON(queryURLBase, function(data, textStatus){
-		if(data.results) {
-			var rows = data.results.bindings;
-			var regions = [];
-			for(i in rows) {
-				var row = rows[i];
-				var region = new Object;
-				region.uri = row.uri.value;
-				index = row.label.value.indexOf("(administrative)");
-				if (index != -1)
-					region.label = row.label.value.substring(0,index);
-				else
-					region.label = row.label.value;
+		// An ajax request that requests the above URI and parses the response. 
+		$.ajax( {
+			dataType :'jsonp',
+			jsonp :'callback',
+			url : Url,
+			success : function(json) {
+		
+				// If we found a related scv:item we display it
+				if( json && 
+					json.results && 
+					json.results.bindings && 
+					json.results.bindings.length > 0) {
+					var bindings = json.results.bindings;
+										
+					for (var i=0; i<bindings.length; i++) {
+						var row = bindings[i];
+						var property = new Object;
+						property.uri = row.uri.value;
+						property.label = row.label.value;
+						properties[i] = property;
+						
+					}
 				
-				regions[i] = region; 
+					for (var i=0;i<properties.length; i++) {
+						calculatePosition(properties[i].uri,properties[i].label,locationURI,i);
+					}
+
+					
+					
+					
+				} 
+
+						
+				// If we did not find any property
+				// resource, display an error message.  
+				else {
+					$('#name_loading').html("");
+					var html = "<div id='missing'>No datasets were found <\/div>";
+					$("#content-holder").html(html);
+				}
 			}
-			displayRegions(regions);
-			displayRegionsOnMap();
-		}
+		});
+		
+		
+
+	}	
+	
+	function calculatePosition(propURI,propLabel,locationURI,propertyIndex) {
+		_URIbase = "http://localhost:8890/sparql?query=";
+		position = 0;
+		
+		// Generate the SPARQL request for calculating the values per property
+		var sparql = " PREFIX data: <http://stats.data-gov.ie/data/>" +
+					 " PREFIX qb: <http://purl.org/linked-data/cube#> " +
+					 " PREFIX dimension: <http://purl.org/linked-data/sdmx/2009/dimension#> " +
+					 " PREFIX property: <http://stats.data-gov.ie/property/> " +
+					 " PREFIX skos: <http://www.w3.org/2004/02/skos/core#> " +
+					 " SELECT ?val ?geo ?label " + 
+					 " WHERE { " + 
+					 " ?obs a qb:Observation . " +
+					 " ?obs dimension:refPeriod " +  indicatorYear + " ." +
+					 " ?obs property:geoArea ?geo . " +
+					 " OPTIONAL { ?geo skos:prefLabel ?label . } . " + 
+					 " ?obs qb:dataSet ?ds . " +
+					 " ?obs <" + propURI + "> ?val . " +
+					 " } ORDER BY desc(?val)";
+		
+		
+		
+		// baseURI for executing the sparql query. 
+		var Url = _URIbase + escape(sparql) + "&format=json";
+
+		// An ajax request that requests the above URI and parses the response. 
+		$.ajax( {
+			dataType :'jsonp',
+			jsonp :'callback',
+			url : Url,
+			success : function(json) {
+		
+				// If we found a related scv:item we display it
+				if( json && 
+					json.results && 
+					json.results.bindings && 
+					json.results.bindings.length > 0) {
+					var bindings = json.results.bindings;
+					var props = []
+					var len = 0;
+					for (var i=0; i<bindings.length; i++) {
+						var row = bindings[i];
+						if (row.val) {
+							var property = new Object();
+							property.val = row.val.value;
+							property.locURI = row.geo.value;
+							//property.locLabel = row.label.value;
+							property.label = propLabel;
+							if (property.locURI == locationURI) {
+								position = i+1;
+								value = property.val;
+							}
+							props[len++] = property;
+						}
+					}
+					if (position != 0) {
+						//console.log('property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
+						positions[propURI]=position;
+						indicators[propURI] = props;
+						console.log(' -- ' + positions[propURI]);
+					}
+					
+					if (propertyIndex == properties.length -1) {
+						selectPropertiesToDisplay();
+					}
+					
+					
+				} 
+			}
 		});
 	}
 	
-	function displayRegions(regions) {
-		var html = " <div> <table> <tbody> ";
-		var indicatorPage = "locationSI.html";
-		for(var i = 0; i < regions.length; i++) {
-			var region = regions[i];
-			var labelfancy = "'a#iframe2"+ i +"'";
-			html += "<tr>" +
-					"<td>" +
-					"<a href='"+ indicatorPage +"?location="+region.uri+"'>" + region.label + "<\/a><\/td><td>" +
-					"<a id='iframe2"+i+"' href='"+region.uri+"' target=\"_blank\">description<\/a><\/td><\/tr>";
+	function selectPropertiesToDisplay() {
+		var currenttop = 0;
+		var currentbottom = 33;
+		
+		var bottomProperty;
+		var topProperty;
+		
+		//Select the top property and the bottom one
+		for (m in positions) {
+			console.log(m + ' ' + positions[m])
+		    if (positions[m] > currenttop) {
+				currenttop = positions[m];
+				bottomProperty = m;
+			}
+			if (positions[m] <= currentbottom) {
+				currentbottom = positions[m];
+				topProperty = m;
+			}
 		}
-		html += " <\/tbody><\/table>";
-		html += "<\/div>";
-		$("#content-holder").html(html);
-	}
-	
-	function displayRegionsOnMap() {
-				var data = new google.visualization.DataTable();
-				data.addRows(6);
-
-				data.addColumn('string', 'Country');
-				data.addColumn('number', 'Popularity');
-
-				data.setValue(0, 0, 'EI01');
-				data.setFormattedValue(0, 0, 'EI01');
-
-				data.setValue(0, 1, 200);
-
-				data.setValue(1, 0, 'EI02');
-				data.setFormattedValue(1, 0, 'EI02');
-
-				data.setValue(1, 1, 300);
-
-				data.setValue(1, 0, 'EI31');
-				data.setFormattedValue(1, 0, 'EI31');
-				data.setValue(1, 1, 300);
-				
-				data.setValue(2, 0, 'EI28');
-				data.setFormattedValue(2, 0, 'EI28');
-				data.setValue(2, 1, 300);
-				
-
-				var options = {};
-					 options['region'] = 'IE';
-					 options['resolution'] = 'provinces';
-					 options['width'] = 556;
-					 options['height'] = 347;
-
-				 var geochart = new google.visualization.GeoChart(document.getElementById('visualization'));
-				 geochart.draw(data,options);
+		
+		displayChartTop1Property(topProperty);
+		displayChartBottom1Property(bottomProperty);
 		
 	}
+	
+	
+	function displayChartTop1Property(topProperty) {
+		var props = indicators[topProperty];
+		console.log(topProperty);
+
+		var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Location');
+        data.addColumn('number', /*topProperty*/props[0].label);
+		data.addRows(props.length);
+
+		for (var i=0; i<props.length; i++) {
+			//data.setValue(i, 0, props[i].locLabel);
+			data.setValue(i, 0, props[i].locURI);
+			data.setValue(i, 1, parseFloat(props[i].val));			
+
+			}
+
+		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_1'));
+		barsVisualization.draw(data, {width: 600, height: 300, title: props[0].label, legend:'none' });
+	
+	}
+	
+	
+	function displayChartBottom1Property(bottomProperty) {
+		var props = indicators[bottomProperty];
+		console.log(bottomProperty);
+
+		var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Location');
+        data.addColumn('number', /*bottomProperty*/props[0].label);
+        data.addRows(props.length);
+
+		for (var i=0; i<props.length; i++) {
+			//data.setValue(i, 0, props[i].locLabel);
+			data.setValue(i, 0, props[i].locURI);
+			data.setValue(i, 1, parseFloat(props[i].val));			
+
+			}
+
+		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_1'));
+		barsVisualization.draw(data, {
+			width: 600, 
+			height: 300, 
+			title: props[0].label, 
+			legend:'none',
+			gridlineColor: '#fff',
+			hAxis: {
+               textPosition: 'none'
+			},
+			vAxis: {
+               textPosition: 'none',
+               baselineColor: '#ccc'
+			}
+			});
+		
+			/*
+		chart.draw(data, {
+          width: 400,
+          height: 240,
+          legend: 'none',
+          gridlineColor: '#fff',
+          hAxis: {
+               textPosition: 'none'
+          },
+          vAxis: {
+               textPosition: 'none',
+               baselineColor: '#ccc'
+          }
+     });*/
+	
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+	
+	
