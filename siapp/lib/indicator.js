@@ -21,9 +21,10 @@
 		name = decodeURIComponent(name);
 		locationName = name;
 		
-		//loadThirdPartyData(uri,name);
+		loadProperties(locationURI,locationName,positions);	
+		loadThirdPartyData(uri,name);
 		
-		loadProperties(locationURI,locationName,positions);
+	
 		
 		//loadDataSets(uri, name);
 		
@@ -43,7 +44,7 @@
 		return vars;
 	}
 	
-	/*
+	
 	
 	function buildDBPediaQuery (name) {
 		index = name.indexOf("City");
@@ -102,7 +103,7 @@
 			}
 		});
 	}
-	*/
+	
 	function displayDBpediaData(region) {
 		/*var area = region.area;
 		if (area=='undefined') {
@@ -113,7 +114,7 @@
 	
 	// In the end we have to choose a particular observation that has the population of the country
 	// so, we will use, by the moment, the one has city|county/total 
-	/*
+	
 	function buildCensusQuery (uri,name) {
 		index = name.indexOf("County");
 		name = name.substring(index+7); 
@@ -160,7 +161,7 @@
 		loadDBpediaData(uri, name);
 		//loadCensusData(uri,name);
 	}
-	*/
+	
 	
 	/*
 	function loadDataSets(resourceUri,resourceName) {
@@ -216,8 +217,6 @@
 					$('#content-holder').html("");
 										
 					displayDataSets(datasets);
-					
-
 				} 
 
 				// If we did not find any scv:item for the specified 
@@ -312,7 +311,7 @@
 					 " ?obs a qb:Observation . " +
 					 " ?obs dimension:refPeriod " +  indicatorYear + " ." +
 					 " ?obs property:geoArea ?geo . " +
-					 " OPTIONAL { ?geo skos:prefLabel ?label . } . " + 
+					 " ?geo skos:prefLabel ?label . " + 
 					 " ?obs qb:dataSet ?ds . " +
 					 " ?obs <" + propURI + "> ?val . " +
 					 " } ORDER BY desc(?val)";
@@ -343,7 +342,7 @@
 							var property = new Object();
 							property.val = row.val.value;
 							property.locURI = row.geo.value;
-							//property.locLabel = row.label.value;
+							property.locLabel = row.label.value;
 							property.label = propLabel;
 							if (property.locURI == locationURI) {
 								position = i+1;
@@ -354,9 +353,14 @@
 					}
 					if (position != 0) {
 						//console.log('property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
-						positions[propURI]=position;
+						var size = positions.length;
+						var pos = new Object();
+						pos.position = position;
+						pos.propURI = propURI;
+						positions[size] = pos;
+						//positions[propURI]=position;
 						indicators[propURI] = props;
-						console.log(' -- ' + positions[propURI]);
+						
 					}
 					
 					if (propertyIndex == properties.length -1) {
@@ -370,34 +374,26 @@
 	}
 	
 	function selectPropertiesToDisplay() {
-		var currenttop = 0;
-		var currentbottom = 33;
+
+		//order the array
+		positions.sort( function (a,b) 
+			{ 
+				return b.position - a.position;
+			} );
 		
-		var bottomProperty;
-		var topProperty;
 		
-		//Select the top property and the bottom one
-		for (m in positions) {
-			console.log(m + ' ' + positions[m])
-		    if (positions[m] > currenttop) {
-				currenttop = positions[m];
-				bottomProperty = m;
-			}
-			if (positions[m] <= currentbottom) {
-				currentbottom = positions[m];
-				topProperty = m;
-			}
-		}
-		
-		displayChartTop1Property(topProperty);
-		displayChartBottom1Property(bottomProperty);
+		displayChartTopProperty(positions[positions.length-1].propURI,positions[positions.length-1].position,1);
+		displayChartTopProperty(positions[positions.length-2].propURI,positions[positions.length-2].position,2);
+		displayChartTopProperty(positions[positions.length-3].propURI,positions[positions.length-3].position,3);
+		displayChartBottomProperty(positions[1].propURI,positions[1].position,1);
+		displayChartBottomProperty(positions[0].propURI,positions[1].position,2);		
 		
 	}
 	
 	
-	function displayChartTop1Property(topProperty) {
+	function displayChartTopProperty(topProperty, position, index) {
 		var props = indicators[topProperty];
-		console.log(topProperty);
+		//console.log(topProperty);
 
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
@@ -405,21 +401,21 @@
 		data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
-			//data.setValue(i, 0, props[i].locLabel);
-			data.setValue(i, 0, props[i].locURI);
+			data.setValue(i, 0, props[i].locLabel);
+			//data.setValue(i, 0, props[i].locURI);
 			data.setValue(i, 1, parseFloat(props[i].val));			
 
 			}
 
-		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_1'));
-		barsVisualization.draw(data, {width: 600, height: 300, title: props[0].label, legend:'none' });
+		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
+		barsVisualization.draw(data, {width: 700, height: 400, title: props[0].label + '- Position ' + position, legend:'none' });
 	
 	}
 	
 	
-	function displayChartBottom1Property(bottomProperty) {
+	function displayChartBottomProperty(bottomProperty,position,index) {
 		var props = indicators[bottomProperty];
-		console.log(bottomProperty);
+		//console.log(bottomProperty);
 
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
@@ -427,26 +423,18 @@
         data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
-			//data.setValue(i, 0, props[i].locLabel);
-			data.setValue(i, 0, props[i].locURI);
+			data.setValue(i, 0, props[i].locLabel);
+			//data.setValue(i, 0, props[i].locURI);
 			data.setValue(i, 1, parseFloat(props[i].val));			
 
 			}
 
-		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_1'));
+		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_'+index));
 		barsVisualization.draw(data, {
-			width: 600, 
-			height: 300, 
-			title: props[0].label, 
+			width: 700, 
+			height: 400, 
+			title: props[0].label + '- Position ' + position, 
 			legend:'none',
-			gridlineColor: '#fff',
-			hAxis: {
-               textPosition: 'none'
-			},
-			vAxis: {
-               textPosition: 'none',
-               baselineColor: '#ccc'
-			}
 			});
 		
 			/*
