@@ -1,6 +1,5 @@
 	$(document).ready(function() {
 		loadResources();
-		
 	});
 
 	function loadResources() {
@@ -20,7 +19,10 @@
 		$.getJSON(queryURLBase, function(data, textStatus){
 		if(data.results) {
 			var rows = data.results.bindings;
-			var regions = [];
+			var cities = [];
+			var counties = [];
+			var iCities = 0;
+			var iCounties = 0;
 			for(i in rows) {
 				var row = rows[i];
 				var region = new Object;
@@ -30,28 +32,38 @@
 					region.label = row.label.value.substring(0,index);
 				else
 					region.label = row.label.value;
-				
-				regions[i] = region; 
+				if (row.label.value.indexOf("City")!=-1) 
+					cities[iCities++] = region; 
+				else
+					counties[iCounties++] = region;
 			}
-			displayRegions(regions);
-			displayRegionsOnMap();
+			displayRegions(cities,counties);
+			//displayRegionsOnMap();
 		}
 		});
 	}
 	
-	function displayRegions(regions) {
-		var html = " <div> <table> <tbody> ";
-		var indicatorPage = "locationSI.html";
-		for(var i = 0; i < regions.length; i++) {
-			var region = regions[i];
-			var labelfancy = "'a#iframe2"+ i +"'";
-			html += "<tr>" +
-					"<td>" +
-					"<a href='"+ indicatorPage +"?uri="+region.uri+"&name="+region.label+"'>" + region.label + "<\/a><\/td><td>" +
-					"<a id='iframe2"+i+"' href='"+region.uri+"' target=\"_blank\">description<\/a><\/td><\/tr>";
+	function displayRegions(cities,counties) {
+		var html = "<div><table><tr><th align='center'>Counties<\/th><th align='center'>Cities<\/th><\/tr>";
+		var indicatorPage = "indicator.html";
+		//we know there are more counties than cities
+		for(var i = 0; i < counties.length; i++) {
+			var city;
+			var county = counties[i];
+			
+			var regionName;
+			regionName = county.label;
+			if (i<cities.length) {
+				city = cities[i];
+				html += "<tr><td>" +
+					"<a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"'>" + county.label + "<\/a><\/td>" +
+					"<td><a href='"+ indicatorPage +"?uri="+city.uri+"&name="+city.label+"'>" + city.label + "<\/a><\/td><\/tr>" ;
+			}
+			else
+				html += "<td>" +
+						"<a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"'>" + county.label + "<\/a><\/td><td><\/td><\/tr>";
 		}
-		html += " <\/tbody><\/table>";
-		html += "<\/div>";
+		html += "<\/table><\/div>";
 		$("#content-holder").html(html);
 	}
 	

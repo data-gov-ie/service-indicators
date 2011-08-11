@@ -9,13 +9,19 @@
 	var indicators = [];
 	var positions = [];
 	
-	_resourceType_City = "http://geo.data-gov.ie/City";
-	_resourceType_County = "http://geo.data-gov.ie/AdministrativeCounty";
-	_nameProperty = "http://www.w3.org/2004/02/skos/core#prefLabel";
 	
 	$(document).ready(function() {
 		document.getElementById('result-container').style.display='none';
 
+		var uri = getUrlVars()["uri"];
+		var name = getUrlVars()["name"];
+		locationURI = uri;
+		name = decodeURIComponent(name);
+		locationName = name;
+		
+		$("#location-title-holder").html(locationName);
+		$("#location-main-holder").html("<a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> " + "- " +indicatorYear);
+		
 		loadProperties(locationURI,locationName,positions);
 
 		//setupAutoComplete();
@@ -35,220 +41,6 @@
 		
 	});
 	
-	
-	/** Functions for the autocomplete **/
-	/**
-	 * This code loads the resources 
-	 * of type _resourceType, that will be the core of the page, and loads their names 
-	 * into an autocomplete field.  
-	 */
-	function setupAutoComplete() {
-		 //$("#progressbar").progressbar({ value: 0});
-			
-		_autoCompleteMap = [];
-		_autoCompleteArray = [];
-
-		// SPARQL query for getting the count of the number of locations
-		
-		var sparql =
-			"SELECT COUNT(?uri) AS ?count WHERE { " +
-				//"?uri a <" + _resourceType + "> . " +
-				" { ?uri a <" + _resourceType_County + "> } UNION { ?uri a <" + _resourceType_City + "> } . " +
-			"?uri <" + _nameProperty + "> ?name . " +
-			"}";
-		_URIbase = "http://localhost:8890/sparql?query=";
-		// URI for executing the sparql query. 
-		var locationUrl = _URIbase + escape(sparql) + "&format=json";
-		
-		// An ajax request that requests the above URI and parses the response. 
-		$.ajax( {
-			dataType :'jsonp',
-			jsonp :'callback',
-			url : locationUrl,
-			success : function(json) {
-				if( json && 
-					json.results && 
-					json.results.bindings && 
-					json.results.bindings.length > 0 &&
-					json.results.bindings[0].count) {
-					loadAutoCompleteData(json.results.bindings[0].count.value,0);
-				}
-			}
-		});
-	}
-
-	/**
-	 * This method loads all resource names from our baseuri
-	 */
-	function loadAutoCompleteData(count,offset) {
-		_callbacks = [];
-		
-		for(var i =0; i < Math.ceil(count/1000.0); i++) {
-			_callbacks[i] = false;
-		}
-		
-		while(offset < count) {
-			loadResources(count, offset);
-			
-			offset+=1000;
-		}
-		
-		waitForCallbacks(new Date().getTime());
-		$("#homesearch #name").val('Introduce a city or county !');
-		$('#homesearch #name').css('color', '#ccc');
-		$("#homesearch #name").click(function() {
-		if (true) {
-			$("#homesearch #name").val('');
-			$('#homesearch #name').css('color', '#000');
-		}
-		});
-		$("#homesearch #name").focus();
-	}
-
-	/**
-	 * This method waits until all of the baseuri requests have 
-	 * completed or 30 seconds have elapsed (whichever happens 
-	 * first) and then displays the auto complete field.
-	 */
-	function waitForCallbacks(startTime) {
-		var test = true;
-		for(var i =0; i < _callbacks.length; i++) {
-			test = test && _callbacks[i];
-		}
-		if(test || (new Date().getTime() - startTime > 30000)) {
-			renderAutoComplete();
-		} else {
-			setTimeout(function() {
-				waitForCallbacks(startTime);
-			}, 100);
-		}
-	}
-	
-	
-	/**
-	 * Use JQuery autocomplete (http://docs.jquery.com/Plugins/Autocomplete) 
-	 * to render an autocomplete field over the data returned by baseuri
-	 */
-	function renderAutoComplete() {
-		for(var key in _autoCompleteMap) {
-			_autoCompleteArray.push(key);
-		}
-		//alert(_autoCompleteMap);
-		//var html =  "<div class='searchbox'>" +
-		//			"<form id='fulltext_form' method='get' action=''>" +
-		//"<div> <input class='bigbutton go' value='go'> 	<\/div> <div> <input type='text' name='name' id='name' class='text search ui-autocomplete-input' style='color: rgb(204, 204, 204);' autocomplete='off' role='textbox' aria-autocomplete='list' aria-haspopup='true'>" +
-		//		"<\/div>  <\/form> <\/div>";
-			
-		var html =  "<div class='searchbox'>Introduce a city or county" +
-					"<form id='fulltext_form' method='get' action=''>" +
-		" <div> <input type='text' name='name' id='name' class='text search ui-autocomplete-input' style='color: rgb(204, 204, 204);' autocomplete='off' role='textbox' aria-autocomplete='list' aria-haspopup='true'>" +
-				"<\/div>  <\/form> <\/div>";
-			
-		$("#auto_complete_container").html(html);
-		$("#homesearch #name").val('');
-		$('#homesearch #name').css('color', '#ccc');
-		$("#homesearch #name").click(function() {
-		if (true) {
-			$("#homesearch #name").val('');
-			$('#homesearch #name').css('color', '#000');
-		}
-		});
-		$("#homesearch #name").focus();
-		 //var $searchBox = $('#mysearchBox');
-		$("#name").autocomplete({
-		open : function(event, ui) {
-			$('.ui-autocomplete').addClass('homesearch')
-		},
-		select: function(event, ui) {
-	
-			//$('#name_loading').html("<img style='padding-left:7px; vertical-align:center;' src='resources/loading.gif'/>");
-			//loadResource(_autoCompleteMap[ui.item.value], ui.item.value);
-			
-			locationURI = _autoCompleteMap[ui.item.value];
-			locationName = ui.item.value;
-
-			document.getElementById('homesearch').style.display='none';
-			document.getElementById('result-container').style.display='block';
-			
-			loadThirdPartyData(locationURI,locationName);
-			
-			loadIndicators(locationURI);
-			
-		},
-		source: _autoCompleteArray,
-		minLength: 2,
-		});
-		
-	}
-	
-	
-	/**
-	 * Query  for the names and URIs of up to 1000 items 
-	 * that are of type _resourceType.
-	 */
-
-	function loadResources(count, offset) {
-		// SPARQL query for getting the names and URIs of up to 1000 items 
-			var sparql =
-			"SELECT ?uri, ?name WHERE { " +
-				//"?uri a <" + _resourceType + "> . " +
-				" { ?uri a <" + _resourceType_County + "> } UNION { ?uri a <" + _resourceType_City + "> } . " +
-			"?uri <"+ _nameProperty +"> ?name . " +			    	
-			"} LIMIT 1000 OFFSET " + offset;
-
-		//  URI for executing the sparql query. 
-		var Url = _URIbase + escape(sparql) + "&format=json";
-		
-		// An ajax request that requests the above URI and parses the response. 
-		$.ajax( {
-			dataType :'jsonp',
-			jsonp :'callback',
-			url : Url,
-			success : function(json) {
-				if(json) {
-					//alert(json);
-					_callbacks[offset/1000] = true;
-					var callbacksComplete = 0;
-					for(var i =0; i < _callbacks.length; i++) {
-						callbacksComplete += (_callbacks[i] ? 1 : 0);
-					}
-					var progress = Math.ceil((100.0*callbacksComplete)/(0.001*count));
-					//$("#progressbar").progressbar( "option", "value", progress );
-					//$("#progess_percent_complete").html(progress + "%");
-					parseAutocompleteData(json);
-				}
-			}
-		});
-	}
-	
-	/**
-	 * Method for parsing the names and URIs of resources from the response 
-	 * to the SPARQL query made by the loadResources() method.
-	 */
-	function parseAutocompleteData(json) {
-		if(json.results && json.results.bindings) {
-			var bindings = json.results.bindings;
-			//alert(bindings);
-			for(var i =0; i < bindings.length; i++) {
-				binding = bindings[i];
-				if(binding.name && binding.uri) {
-					console.log(binding.name);
-					console.log(binding.uri);
-					if(binding.uri.value.toLowerCase().indexOf("list_of") == -1) {
-						var name = binding.name.value;
-						
-						var index = name.indexOf("(administrative)");
-						if (index != -1)
-							name = name.substring(0,index);
-								
-						_autoCompleteMap[name] = binding.uri.value;
-					}
-				}
-			}
-		}
-	}
-	
-	
 	/** General purpose functions **/
 	function getUrlVars() {
 		var vars = [], hash;
@@ -262,9 +54,8 @@
 		return vars;
 	}
 	
-	
 	function switchLayers() {
-		document.getElementById('result-container').style.display='none';
+	/*	document.getElementById('result-container').style.display='none';
 		document.getElementById('homesearch').style.display='block';
 
 		$("#homesearch #name").val('');
@@ -281,7 +72,7 @@
 		var html = "<table class=\"externalInfo\"><tr><td class=\"externalInfo\"><br><div id=\"dbpedia-content-holder\"><\/div><br><div id=\"census-content-holder\"><\/div><\/td><\/tr><\/table>" +
 				   "<table class=\"chart\"><tr><td><div id=\"chart_div_top_1\"><\/div><\/td><td><div id=\"chart_div_top_2\"><\/div><\/td><\/tr>" +
 				   "<tr><td><div id=\"chart_div_bottom_1\"><\/div><\/td><td><div id=\"chart_div_bottom_2\"><\/div><\/td><\/tr><\/table>";
-		$("#tables").html(html);
+		$("#tables").html(html);*/
 	}
 	
 	/** Functions related to the DBpedia **/
@@ -398,7 +189,7 @@
 	function loadCensusData(uri,name) {
 		var sparql = buildCensusQuery(uri,name);
 		_URIbase = "http://data-gov.ie/sparql?query=";
-		console.log(sparql);
+		//console.log(sparql);
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
 		var region = new Object;
 		$.getJSON(queryURLBase, function(data, textStatus){
@@ -433,7 +224,7 @@
 	
 	/** Function to load properties **/
 	function loadProperties(locationURI,locationName,positions) {
-		$("#auto_complete_container").html("<div style='margin:auto; width:300px;'> <center> <b>Initializing</b><br><br> <img style='padding-left:7px; vertical-align:center; width: 35px;' src='img/ajax-loader-search.gif'/> </center>");
+		$("#loading_container").html("<div style='margin:auto; width:300px;'> <center> <b>Loading</b><br><br> <img style='padding-left:7px; vertical-align:center; width: 40px;' src='img/ajax-loader-search.gif'/> </center>");
 	
 		_URIbase = "http://localhost:8890/sparql?query=";
 		// Generate the SPARQL request for retrieving the properties of 
@@ -530,37 +321,35 @@
 							property.val = row.val.value;
 							property.locURI = row.geo.value;
 							property.locLabel = row.label.value;
-							
 							var index = property.locLabel.indexOf("(administrative)");
 							if (index != -1)
 								property.locLabel = property.locLabel.substring(0,index);
-
 							property.label = propLabel;
-							/* do it later
+							
 							if (property.locURI == locationURI) {
 								position = i+1;
 								value = property.val;
-							}*/
+							}
 							props[len++] = property;
 						}
 					}
 					
-					indicators[propURI] = props;
+					//indicators[propURI] = props;
 					
-					/* do it later
 					if (position != 0) {
 						//console.log('property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
 						var size = positions.length;
 						var pos = new Object();
 						pos.position = position;
 						pos.propURI = propURI;
+						pos.propLabel = propLabel;
 						positions[size] = pos;
 						//positions[propURI]=position;
 						indicators[propURI] = props;
-					} */
+					} 
+					
 					if (propertyIndex == properties.length -1) {
-						//selectPropertiesToDisplay();
-						setupAutoComplete();
+						selectPropertiesToDisplay();
 					}
 				} 
 			}
@@ -568,33 +357,6 @@
 	}
 
 	
-	function loadIndicators(locationURI) {
-		var position;
-		for (var i in indicators) {
-			position = 0;
-			var props = indicators[i];
-			for (var k=0;k<props.length;k++) {
-				var property = props[k];
-				if (property.locURI == locationURI) {
-					position = k+1;
-					value = property.val;
-				}
-			}
-			if (position != 0) {
-				//console.log('property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
-				var size = positions.length;
-				var pos = new Object();
-				pos.position = position;
-				pos.propURI = i;
-				positions[size] = pos;
-			} 
-		}
-		
-		selectPropertiesToDisplay();
-		
-		positions = [];
-		
-	}
 	/** Function to select the properties to display, two top properties, and two bottom properties **/	
 	function selectPropertiesToDisplay() {
 		//order the array
@@ -602,11 +364,17 @@
 			{ 
 				return b.position - a.position;
 			} );
+			
+			
+			
 		displayChartTopProperty1(positions[positions.length-1].propURI,positions[positions.length-1].position,1);
 		displayChartTopProperty2(positions[positions.length-2].propURI,positions[positions.length-2].position,2);
 		//displayChartTopProperty(positions[positions.length-3].propURI,positions[positions.length-3].position,3);
 		displayChartBottomProperty1(positions[1].propURI,positions[1].position,1);
 		displayChartBottomProperty2(positions[0].propURI,positions[0].position,2);		
+		
+		document.getElementById('result-container').style.display='block';
+		$('#loading_container').html("");
 	}
 	
 	/** Function to display a chart of a top property 
@@ -621,17 +389,27 @@
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
         data.addColumn('number', /*topProperty*/props[0].label);
+		data.addColumn('number', 'foo');
 		data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
 			data.setValue(i, 0, props[i].locLabel);
 			//data.setValue(i, 0, props[i].locURI);
-			data.setValue(i, 1, parseFloat(props[i].val));			
-
+			if (props[i].locURI == locationURI) {
+				data.setValue(i, 1, 0);
+				data.setValue(i, 2, parseFloat(props[i].val));			
 			}
+			else {
+				data.setValue(i, 1, parseFloat(props[i].val));
+				data.setValue(i, 2, 0);			
+			}
+		}
 
+		$('#first-position').html("<p class='position'> # " + position +"&nbsp;&nbsp;</p>");
+		$('#first-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
+		
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
-		barsVisualization.draw(data, {width: 900, height: 500, title: props[0].label + ' - Position ' + position, legend:'none', backgroundColor: '#F7F7F7'});
+		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#072699'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7',  vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' } });
 	
 	}
 
@@ -647,17 +425,27 @@
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
         data.addColumn('number', /*topProperty*/props[0].label);
+		data.addColumn('number', 'foo');		
 		data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
 			data.setValue(i, 0, props[i].locLabel);
 			//data.setValue(i, 0, props[i].locURI);
-			data.setValue(i, 1, parseFloat(props[i].val));			
-
+			if (props[i].locURI == locationURI) {
+				data.setValue(i, 1, 0);
+				data.setValue(i, 2, parseFloat(props[i].val));			
 			}
+			else {
+				data.setValue(i, 1, parseFloat(props[i].val));
+				data.setValue(i, 2, 0);			
+			}			
+		}
 
+		$('#second-position').html("<p class='position'> # " + position +"&nbsp;&nbsp;</p>");
+		$('#second-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
+			
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
-		barsVisualization.draw(data, {width: 900, height: 500, title: props[0].label + ' - Position ' + position, legend:'none', backgroundColor: '#F7F7F7'});
+		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#072699'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7',   vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' } } );
 	
 	}
 	
@@ -672,24 +460,38 @@
 
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
-        data.addColumn('number', /*bottomProperty*/props[0].label);
+        data.addColumn('number', props[0].label);
+		data.addColumn('number', 'foo');
         data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
 			data.setValue(i, 0, props[i].locLabel);
 			//data.setValue(i, 0, props[i].locURI);
-			data.setValue(i, 1, parseFloat(props[i].val));			
+			if (props[i].locURI == locationURI) {
+				data.setValue(i, 1, 0);
+				data.setValue(i, 2, parseFloat(props[i].val));			
 			}
+			else {
+				data.setValue(i, 1, parseFloat(props[i].val));
+				data.setValue(i, 2, 0);			
+			}			
+		}
 
+		$('#first-last-position').html("<p class='position'> # " + position +"&nbsp;&nbsp;</p>");
+		$('#first-last-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
+
+			
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_'+index));
 		barsVisualization.draw(data, {
 			width: 900, 
 			height: 500,
-			is3D: true,
-			colors:[{color:'#FF0000', darker:'#680000'}],
-			title: props[0].label + ' - Position ' + position, 
+			colors:['#C82442','#8B071F'],
+			isStacked:'true',
+			//is3D: true,
+			//colors:[{color:'#FF0000', darker:'#680000'}],
 			legend:'none',
-			backgroundColor: '#F7F7F7'
+			backgroundColor: '#F7F7F7',
+			vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 			});
 			/*
 			chart.draw(data, {
@@ -720,7 +522,8 @@
 
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
-        data.addColumn('number', /*bottomProperty*/props[0].label);
+        data.addColumn('number', props[0].label);
+		data.addColumn('number', 'foo');
         data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
@@ -729,15 +532,20 @@
 			data.setValue(i, 1, parseFloat(props[i].val));			
 			}
 
+		$('#second-last-position').html("<p class='position'> # " + position +"&nbsp;&nbsp;</p>");
+		$('#second-last-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
+
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_'+index));
 		barsVisualization.draw(data, {
 			width: 900, 
 			height: 500,
-			is3D: true,
-			colors:[{color:'#FF0000', darker:'#680000'}],
-			title: props[0].label + ' - Position ' + position, 
+			colors:['#C82442','#8B071F'],
+			isStacked:'true',
+			//is3D: true,
+			//colors:[{color:'#FF0000', darker:'#680000'}],
 			legend:'none',
-			backgroundColor: '#F7F7F7'
+			backgroundColor: '#F7F7F7',
+			vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 			});
 			/*
 			chart.draw(data, {

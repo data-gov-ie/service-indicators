@@ -36,6 +36,29 @@ table.externalInfo td {
 	text-align:center;
 }
 
+table.position {
+	border-width: 0px;
+	border-spacing: 0px;
+	border-style: none;
+	#border-color: #F7F7F7;
+	background-color: #F7F7F7;
+	#padding: 2px;
+	width:100%;
+	margin-right:0%;
+	margin-left:0%;
+	
+}
+table.position td {
+	border-width: 0px;
+	#padding: 1px;
+	border-style: none;
+	#border-color: #F7F7F7;
+	background-color: #F7F7F7;
+	#width:%;
+	#margin-right:15%;
+	#margin-left:15%;
+	#text-align:center;
+}
 
 table.chart {
 	border-width: 1px;
@@ -176,4 +199,20 @@ table.chart td {
     background: #8AD5FD none repeat scroll 0 0;
     margin: -1px;
 	font-size: 12px;
+}
+
+p.position {
+	text-align: right;
+	font-family: 'Tienne', serif;
+	font-size: 25px;
+	color: #030303;
+	#text-shadow: #040404 -1px -1px 1px;
+}
+
+p.position -description{
+	text-align: left;
+	font-family: 'Tienne', serif;
+	font-size: 16px;
+	color: #909090;
+	#text-shadow: #040404 -1px -1px 1px;
 }
