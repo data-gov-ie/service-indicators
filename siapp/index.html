@@ -1,36 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Service Indicators - Ireland</title>
+<title>Service Indicators</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <link rel="stylesheet" href="style/main.css" type="text/css" media="all"/>
+  
+  <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+    <!-- Note that you need to replace the key ABCDEF with your Maps API key. -->
+    <!-- Sign up for a Maps API key here: http://code.google.com/apis/maps/signup.html -->
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js" type="text/javascript"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.js" type="text/javascript"></script> 
-  <link href='http://fonts.googleapis.com/css?family=Redressed&v1' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Redressed&v1' rel='stylesheet' type='text/css'>  
+  <script type="text/javascript">
+      google.load('visualization', '1',
+          {'packages': ['table', 'map', 'corechart']});
+      google.setOnLoadCallback(initialize);
+			
+      function initialize() {
+      }
+	</script>
+	
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js" type="text/javascript"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.js" type="text/javascript"></script> 
   
-    <!-- google stuff -->	  
-  <script type='text/javascript' src='https://www.google.com/jsapi'></script>
-  <script type='text/javascript'>
-   google.load('visualization', '1', {'packages': ['geochart']});
-  <!-- google stuff -->	
-  </script>
-  
-  <script type="text/javascript" src="lib/location.js"></script>
+  <script type="text/javascript" src="lib/indicator.js"></script>
+    
 </head>
 <body>
-
-<div id="content-holder"> 
-
+<br>
+<div id="homesearch">
+	<div id="auto_complete_container">
+		
+	</div>			
 </div>
 
+<div id="result-container">
+
+<div id="content-holder"> 
+</div>
+
+
+<center>
+<h1><div id="location-main-holder"/></h1>
 <br>
-<table align="center" >
+<img src="img/next.png" height="12" width="12" style="cursor:pointer" onclick="switchLayers();"/> 
+</center>
+
+
+<div id="tables">
+
+
+<table class="externalInfo">
+	<tr>
+		<td class="externalInfo">
+			<br>
+			<div id="dbpedia-content-holder">
+			</div>
+			<br>
+			<div id="census-content-holder">
+			</div>
+		</td>
+	</tr>
+</table>
+<table class="chart">
 	  <tr> 		
 		<td>
-          <div id="visualization"></div>
+          <div id="chart_div_top_1"></div>
+        </td>
+		<td>
+		  <div id="chart_div_top_2"></div>
+		</td>
+	  </tr>
+	  <tr> 		
+		<td>
+		<div id="chart_div_bottom_1"></div>
+        </td>
+		<td>
+          <div id="chart_div_bottom_2"></div>
         </td>
 	  </tr>
-</table>
+</table> 
+</div>
 
 </body>
 </html>
-
