@@ -6,9 +6,8 @@
 
  <!-- google fonts -->
   <link href='http://fonts.googleapis.com/css?family=Tienne' rel='stylesheet' type='text/css'>
-  
-  
   <link rel="stylesheet" href="style/main.css" type="text/css" media="all"/>
+  
   <script type="text/javascript" src="http://www.google.com/jsapi"></script>
     <!-- Note that you need to replace the key ABCDEF with your Maps API key. -->
     <!-- Sign up for a Maps API key here: http://code.google.com/apis/maps/signup.html -->
@@ -41,10 +40,11 @@
 <div id="content-holder"> 
 </div>
 
-<center>
-<h1>Service indicators for <div id="location-main-holder"/></h1>
-<img src="img/home.png" height="30" width="30" style="cursor:pointer" onclick="history.back()"/>
+
+<h1 class="service-title"><div id="location-main-holder"/></h1>
 <br>
+<center>
+<img src="img/home.png" height="35" width="35" style="cursor:pointer" onclick="history.back()"/>
 </center>
 
 
@@ -63,6 +63,8 @@
 		</td>
 	</tr>
 </table>
+<br>
+<p align="center" style="font-family: 'Tienne', serif; font-size: 12px;">The indicators displayed are the ones in which the County/City has very good and bad performance.</p>
 
 <table>
 	<tr>
@@ -102,9 +104,19 @@
 	<tr>
 		<td>  
 		  <div id="chart_div_top_1"></div>
+		  <p align="center" style="font-family: 'Tienne', serif; font-size: 12px;">Place your mouse over each bar to get more information.</p>
         </td>
 		<td>
 	      <div id="chart_div_top_2"></div>
+		  <p align="center" style="font-family: 'Tienne', serif; font-size: 12px;">Place your mouse over each bar to get more information.</p>
+		</td>
+	</tr>
+	<tr>
+		<td>  
+		&nbsp;
+        </td>
+		&nbsp;
+		<td>
 		</td>
 	</tr>
 	<tr>
@@ -160,12 +172,15 @@
 	<tr>
 		<td>  
 		  <div id="chart_div_bottom_1"></div>
+		  <p align="center" style="font-family: 'Tienne', serif; font-size: 12px;">Place your mouse over each bar to get more information.</p>
         </td>
 		<td>
 	      <div id="chart_div_bottom_2"></div>
+		  <p align="center" style="font-family: 'Tienne', serif; font-size: 12px;">Place your mouse over each bar to get more information.</p>
 		</td>
     </tr>
 </table> 
+
 </div>
 
 </body>

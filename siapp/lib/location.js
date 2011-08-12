@@ -44,7 +44,7 @@
 	}
 	
 	function displayRegions(cities,counties) {
-		var html = "<div><table><tr><th align='center'>Counties<\/th><th align='center'>Cities<\/th><\/tr>";
+		var html = "<div><table width='50%'><tr><th align='left' width='50%'>Counties<\/th><th align='left' width='50%'>Cities<\/th><\/tr>";
 		var indicatorPage = "indicator.html";
 		//we know there are more counties than cities
 		for(var i = 0; i < counties.length; i++) {
@@ -55,15 +55,19 @@
 			regionName = county.label;
 			if (i<cities.length) {
 				city = cities[i];
+				/*html += "<tr><td>" +
+					"<a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"' style='text-decoration: none;'>" + county.label + "<\/a><\/td>" +
+					"<td><a href='"+ indicatorPage +"?uri="+city.uri+"&name="+city.label+"' style='text-decoration: none;'>" + city.label + "<\/a><\/td><\/tr>" ;*/
 				html += "<tr><td>" +
-					"<a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"'>" + county.label + "<\/a><\/td>" +
-					"<td><a href='"+ indicatorPage +"?uri="+city.uri+"&name="+city.label+"'>" + city.label + "<\/a><\/td><\/tr>" ;
+						"<ul id='dhtmlgoodies_menu'>" +
+						"<li> <a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"'>"  + county.label + "<\/a><\/li><\/td>" +
+						"<td> <ul id='dhtmlgoodies_menu'> <li><a href='"+ indicatorPage +"?uri="+city.uri+"&name="+city.label+"' style='text-decoration: none;'>" + city.label + "<\/a><\/li><\/td><\/tr>" ;
 			}
 			else
-				html += "<td>" +
-						"<a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"'>" + county.label + "<\/a><\/td><td><\/td><\/tr>";
+				html += "<td><ul id='dhtmlgoodies_menu'>" +
+						"<li><a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"' style='text-decoration: none;'>" + county.label + "<\/a><\/li><\/td><td><\/td><\/tr>";
 		}
-		html += "<\/table><\/div>";
+		html += "<\/tr><\/td><\/table><\/div>";
 		$("#content-holder").html(html);
 	}
 	

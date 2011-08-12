@@ -10,6 +10,7 @@
 	var positions = [];
 	
 	
+	
 	$(document).ready(function() {
 		document.getElementById('result-container').style.display='none';
 
@@ -20,10 +21,15 @@
 		locationName = name;
 		
 		$("#location-title-holder").html(locationName);
-		$("#location-main-holder").html("<a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> " + "- " +indicatorYear);
+		$("#location-main-holder").html("Service indicators for <a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> " + "- " +indicatorYear);
+		
 		
 		loadProperties(locationURI,locationName,positions);
 
+		loadThirdPartyData(uri,name);
+		
+	
+		
 		//setupAutoComplete();
 		/*var uri = getUrlVars()["uri"];
 		var name = getUrlVars()["name"];
@@ -145,16 +151,24 @@
 			
 		//$("#location-main-holder").html();
 		
-		var threshold   = 800,
+		var img = "img/no-image.gif";
+		
+		if (locationName.indexOf("County")!=-1)
+			img = region.img;
+		
+		
+		var threshold   = 500,
 		successFunc = function(){ 
-			$("#dbpedia-content-holder").html("<a href=\""+region.name+"\" target='_blank'>" + locationName + " in DBpedia </a><br>" + "<img src=\"" + region.img + "\"><br><a href=\""+region.web+"\" target=\"_blank\">" + region.web +"</a>"); //  + area );
+		 console.log('It exists!');
+			$("#dbpedia-content-holder").html("<p class='dbpedia-text'><a href=\""+region.name+"\" target='_blank'>" + locationName + " in DBpedia </a><br>" + "<img src=\"" + img + "\"><br><a href=\""+region.web+"\" target=\"_blank\">" + region.web +"<\/a> <\/p>"); //  + area );
 		};
 		var myXHR = $.ajax({
 		  url: $("<a href=\""+ region.img + "\"").attr('href'),
 		  type: 'text',
 		  method: 'get',
 		  error: function() {
-			$("#dbpedia-content-holder").html("<a href=\""+region.name+"\" target='_blank'>" + locationName + " in DBpedia </a><br>" + "<a href=\""+region.web+"\" target=\"_blank\">" + region.web +"</a>"); //  + area );
+		  console.log('file does not exist');
+			$("#dbpedia-content-holder").html("<p class='dbpedia-text'><a href=\""+region.name+"\" target='_blank'>" + locationName + " in DBpedia </a><br>" + "<a href=\""+region.web+"\" target=\"_blank\">" + region.web +"<\/a> <\/p>"); //  + area );
 		  },
 		  success: successFunc
 		});
@@ -170,18 +184,24 @@
 	/** In the end we have to choose a particular observation that has the population of the country **/
 	/** so, we will use, by the moment, the one has city|county/total **/
 	function buildCensusQuery (uri,name) {
+		//alert(name);
 		index = name.indexOf("County");
-		name = name.substring(index+7); 
+		if (index!=-1) {
+			name = name.substring(index+7); 
+		}
+		else {
+			index = name.indexOf("City");
+			name = name.substring(0,index-1);
+		}
 	    name = name.toLowerCase();
+		//alert(name);
 		var sparql = " PREFIX qb: <http://purl.org/linked-data/cube#> " +
 					 " PREFIX property: <http://stats.data-gov.ie/property/>  " +
-					 " SELECT ?o ?pop " +
+					 " SELECT ?pop " +
 					 " WHERE { " +
-					 " ?o a qb:Observation . " + 
-					 " ?o property:geoArea <" + uri + "> . " +
-					 " ?o property:population ?pop . " +
-					 " FILTER(REGEX(STR(?o),\"" + name +"/total\")) . " +
-					 " } LIMIT 10";
+					" <http://stats.data-gov.ie/data/persons-by-ethnic-background/2006/" + name + "/total> property:population ?pop . " +
+ 					 " } ";
+		
 		return sparql;
 	}	
 
@@ -210,13 +230,13 @@
 
 	/** Function to display data from census for a given City/County **/	
 	function displayCensusData(region) {
-		$("#census-content-holder").html("Population " + region.population );
+		$("#census-content-holder").html("<p class='dbpedia-text'>Population " + region.population +"<\/p>" );
 	}
 	
 	/** Function to load data from external resources **/
 	function loadThirdPartyData(uri, name) {
 		loadDBpediaData(uri, name);
-		//loadCensusData(uri,name);
+		loadCensusData(uri,name);
 	}
 	
 	
@@ -389,7 +409,7 @@
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
         data.addColumn('number', /*topProperty*/props[0].label);
-		data.addColumn('number', 'foo');
+		data.addColumn('number', props[0].label);
 		data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
@@ -405,11 +425,12 @@
 			}
 		}
 
-		$('#first-position').html("<p class='position'> # " + position +"&nbsp;&nbsp;</p>");
+		
+		$('#first-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
 		$('#first-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
 		
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
-		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#072699'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7',  vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' } });
+		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#072699'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } }); //,  vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 	
 	}
 
@@ -425,7 +446,7 @@
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
         data.addColumn('number', /*topProperty*/props[0].label);
-		data.addColumn('number', 'foo');		
+		data.addColumn('number', props[0].label);		
 		data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
@@ -441,11 +462,11 @@
 			}			
 		}
 
-		$('#second-position').html("<p class='position'> # " + position +"&nbsp;&nbsp;</p>");
+		$('#second-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
 		$('#second-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
 			
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
-		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#072699'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7',   vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' } } );
+		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#072699'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } } ); //vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 	
 	}
 	
@@ -461,7 +482,7 @@
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
         data.addColumn('number', props[0].label);
-		data.addColumn('number', 'foo');
+		data.addColumn('number', props[0].label);
         data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
@@ -477,7 +498,7 @@
 			}			
 		}
 
-		$('#first-last-position').html("<p class='position'> # " + position +"&nbsp;&nbsp;</p>");
+		$('#first-last-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
 		$('#first-last-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
 
 			
@@ -491,22 +512,9 @@
 			//colors:[{color:'#FF0000', darker:'#680000'}],
 			legend:'none',
 			backgroundColor: '#F7F7F7',
-			vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
+			hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} }
+			//vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 			});
-			/*
-			chart.draw(data, {
-			  width: 400,
-			  height: 240,
-			  legend: 'none',
-			  gridlineColor: '#fff',
-			  hAxis: {
-				   textPosition: 'none'
-			  },
-			  vAxis: {
-				   textPosition: 'none',
-				   baselineColor: '#ccc'
-			  }
-     });*/
 	}
 	
 	
@@ -523,16 +531,24 @@
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
         data.addColumn('number', props[0].label);
-		data.addColumn('number', 'foo');
+		data.addColumn('number', props[0].label);
         data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
 			data.setValue(i, 0, props[i].locLabel);
 			//data.setValue(i, 0, props[i].locURI);
-			data.setValue(i, 1, parseFloat(props[i].val));			
+			if (props[i].locURI == locationURI) {
+				data.setValue(i, 1, 0);
+				data.setValue(i, 2, parseFloat(props[i].val));			
+			}
+			else {
+				data.setValue(i, 1, parseFloat(props[i].val));
+				data.setValue(i, 2, 0);			
+			}			
+
 			}
 
-		$('#second-last-position').html("<p class='position'> # " + position +"&nbsp;&nbsp;</p>");
+		$('#second-last-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
 		$('#second-last-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
 
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_'+index));
@@ -545,22 +561,9 @@
 			//colors:[{color:'#FF0000', darker:'#680000'}],
 			legend:'none',
 			backgroundColor: '#F7F7F7',
-			vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
+			hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} }
+			//vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 			});
-			/*
-			chart.draw(data, {
-			  width: 400,
-			  height: 240,
-			  legend: 'none',
-			  gridlineColor: '#fff',
-			  hAxis: {
-				   textPosition: 'none'
-			  },
-			  vAxis: {
-				   textPosition: 'none',
-				   baselineColor: '#ccc'
-			  }
-     });*/
 	}
 	
 	

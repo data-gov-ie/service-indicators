@@ -4,7 +4,7 @@ body, html {
     -moz-background-inline-policy: continuous;
     -moz-background-origin: padding;
     background: #F7F7F7 none repeat scroll 0 0;
-    border-top: 3px solid #CCCCCC;
+    #border-top: 3px solid #CCCCCC;
     font-family: helvetica,sans-serif;
     font-size: 16px;
     font-style: normal;
@@ -14,21 +14,21 @@ body, html {
 }
 
 table.externalInfo {
-	border-width: 1px;
-	border-spacing: 0px;
-	border-style: outset;
-	border-color: #F7F7F7;
+	#border-width: 1px;
+	#border-spacing: 0px;
+	#border-style: outset;
+	#border-color: #F7F7F7;
 	background-color: #F7F7F7;
-	padding: 2px;
+	#padding: 2px;
 	width:70%;
 	margin-right:15%;
 	margin-left:15%;
 }
 table.externalInfo td {
-	border-width: 4px;
-	padding: 1px;
-	border-style: ridge;
-	border-color: #F7F7F7;
+	#border-width: 4px;
+	#padding: 1px;
+	#border-style: ridge;
+	#border-color: #F7F7F7;
 	background-color: #F7F7F7;
 	width:70%;
 	margin-right:15%;
@@ -201,18 +201,40 @@ table.chart td {
 	font-size: 12px;
 }
 
-p.position {
+.position {
 	text-align: right;
-	font-family: 'Tienne', serif;
-	font-size: 25px;
+	font-family: 'Tienne', sans-serif;
+	font-size: 24px;
 	color: #030303;
-	#text-shadow: #040404 -1px -1px 1px;
+	text-shadow: 4px 4px 4px #aaa;
+	font-weight: bold;
 }
-
-p.position -description{
+.position-description{
 	text-align: left;
 	font-family: 'Tienne', serif;
 	font-size: 16px;
-	color: #909090;
-	#text-shadow: #040404 -1px -1px 1px;
+	color: #616161;
+	font-weight: bold;
+	#text-shadow: 4px 4px 4px #aaa;
+}
+
+.service-title{
+	text-align: center;
+	font-family: 'Tienne', sans-serif;
+	font-size: 24px;
+	color: #030303;
+	text-shadow: 2px 2px 2px #aaa;
+	font-weight: bold;
+}
+
+.dbpedia-text {
+	text-align: center;
+	font-family: 'Tienne', serif;
+	font-size: 13px;
+	color: #616161;
+	font-weight: bold;
+}
+
+a:link{
+	text-decoration: none; 
 }
