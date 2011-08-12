@@ -14,21 +14,21 @@ body, html {
 }
 
 table.externalInfo {
-	#border-width: 1px;
-	#border-spacing: 0px;
-	#border-style: outset;
-	#border-color: #F7F7F7;
+	border-width: 1px;
+	border-spacing: 0px;
+	border-style: outset;
+	border-color: #F7F7F7;
 	background-color: #F7F7F7;
-	#padding: 2px;
+	padding: 2px;
 	width:70%;
 	margin-right:15%;
 	margin-left:15%;
 }
 table.externalInfo td {
-	#border-width: 4px;
-	#padding: 1px;
-	#border-style: ridge;
-	#border-color: #F7F7F7;
+	border-width: 4px;
+	padding: 1px;
+	border-style: ridge;
+	border-color: #F7F7F7;
 	background-color: #F7F7F7;
 	width:70%;
 	margin-right:15%;
@@ -37,27 +37,28 @@ table.externalInfo td {
 }
 
 table.position {
-	border-width: 0px;
+	border-width: 1px;
 	border-spacing: 0px;
-	border-style: none;
-	#border-color: #F7F7F7;
+	border-style: outset;
+	border-color: #F7F7F7;
 	background-color: #F7F7F7;
-	#padding: 2px;
+	padding: 2px;
 	width:100%;
 	margin-right:0%;
 	margin-left:0%;
+	text-align:left;
 	
 }
 table.position td {
 	border-width: 0px;
-	#padding: 1px;
+	padding: 1px;
 	border-style: none;
-	#border-color: #F7F7F7;
+	border-color: #F7F7F7;
 	background-color: #F7F7F7;
-	#width:%;
-	#margin-right:15%;
-	#margin-left:15%;
-	#text-align:center;
+	width:%;
+	margin-right:15%;
+	margin-left:15%;
+	text-align:left;
 }
 
 table.chart {
@@ -67,7 +68,7 @@ table.chart {
 	border-color: #F7F7F7;
 	background-color: #F7F7F7;
 	padding: 2px;
-	#border-collapse: separate;
+	border-collapse: separate;
 	background-color: #F7F7F7;
 	width:100%;
 	margin-right:0%;
@@ -211,6 +212,7 @@ table.chart td {
 }
 .position-description{
 	text-align: left;
+	vetical-align: top;
 	font-family: 'Tienne', serif;
 	font-size: 16px;
 	color: #616161;
@@ -221,11 +223,21 @@ table.chart td {
 .service-title{
 	text-align: center;
 	font-family: 'Tienne', sans-serif;
-	font-size: 24px;
+	font-size: 30px;
 	color: #030303;
 	text-shadow: 2px 2px 2px #aaa;
 	font-weight: bold;
 }
+
+.service-subtitle{
+	text-align: center;
+	font-family: 'Tienne', sans-serif;
+	font-size: 20px;
+	color: #030303;
+	text-shadow: 2px 2px 2px #aaa;
+	font-weight: bold;
+}
+
 
 .dbpedia-text {
 	text-align: center;
@@ -238,3 +250,28 @@ table.chart td {
 a:link{
 	text-decoration: none; 
 }
+
+
+.menu,
+.menu ul {
+margin:0;
+padding:0;
+list-style:none;
+}
+.menu {width:200px;}
+.menu li {
+margin:0;
+padding:0;
+margin-bottom:1px;
+}
+.menu a {
+display:block;
+padding:2px 5px;
+color:#000;
+background:#b0c23d;
+text-decoration:none;
+}
+.menu a:hover {background:#d9dcb0;}
+.menu ul li {padding-left:15px;}
+.menu ul a {background:#ced174;}
+.hidden {display:none;}

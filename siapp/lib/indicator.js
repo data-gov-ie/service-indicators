@@ -21,14 +21,11 @@
 		locationName = name;
 		
 		$("#location-title-holder").html(locationName);
-		$("#location-main-holder").html("Service indicators for <a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> " + "- " +indicatorYear);
-		
+		$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
 		
 		loadProperties(locationURI,locationName,positions);
 
 		loadThirdPartyData(uri,name);
-		
-	
 		
 		//setupAutoComplete();
 		/*var uri = getUrlVars()["uri"];
@@ -36,14 +33,10 @@
 		locationURI = uri;
 		name = decodeURIComponent(name);
 		locationName = name;
-		
 		loadProperties(locationURI,locationName,positions);	
-		
 		loadThirdPartyData(uri,name);
-		
 		$("#location-title-holder").html(locationName);
 		$("#location-main-holder").html("<a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> " + "- " +indicatorYear);*/
-
 		
 	});
 	
@@ -113,18 +106,17 @@
 					 " FILTER(REGEX(?label, \"" + city + "\" )) . " +
 					 " } " ;
 		}
+		//console.log(sparql);
 		return sparql;
 	}
 	
 	/** Function to load data from DBpedia for a given City/County (uri and name) **/
 	function loadDBpediaData(uri,name) {
 		var sparql = buildDBPediaQuery(name);
-		
-		//console.log(sparql);
 		_URIbase = "http://dbpedia.org/sparql?query=";
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
 		var region = new Object;
-		$.getJSON(queryURLBase, function(data, textStatus){
+		/*$.getJSON(queryURLBase, function(data, textStatus){
 		if(data.results) {
 			var rows = data.results.bindings;
 			var regions = [];
@@ -140,14 +132,45 @@
 			}
 			displayDBpediaData(region);
 		}
-		});
+		});*/
+		$.ajax( {
+			dataType :'jsonp',
+			jsonp :'callback',
+			url : queryURLBase,
+			error : function () {
+					alert('error al llamar a dbpedia');
+			},
+			success : function(json) {
+				
+				if( json && 
+					json.results && 
+					json.results.bindings && 
+					json.results.bindings.length > 0) {
+					var rows = json.results.bindings;
+					var regions = [];
+					for(i in rows) {
+						var row = rows[i];
+						region.name = row.loc.value;
+						region.web = row.web.value;
+						if (region.web.indexOf("http")==-1)
+							region.web ="http://"+region.web;
+						region.img = row.img.value;
+						//region.area = row.area.value;
+						regions[i] = region; 
+					}
+					displayDBpediaData(region);
+				}
+		}});
+		
+		
+		
 	}
 	
 	/** Function to display dbpedia data for a given city/county - region is an internal object **/
 	function displayDBpediaData(region) {
 		
-		$("#location-title-holder").html(locationName);
-		$("#location-main-holder").html("Service indicators for <a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> " + "- " +indicatorYear );
+		//$("#location-title-holder").html(locationName);
+		//$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
 			
 		//$("#location-main-holder").html();
 		
@@ -235,7 +258,7 @@
 	
 	/** Function to load data from external resources **/
 	function loadThirdPartyData(uri, name) {
-		loadDBpediaData(uri, name);
+		loadDBpediaData(uri, name); //there are some problems now ...
 		loadCensusData(uri,name);
 	}
 	
@@ -244,7 +267,7 @@
 	
 	/** Function to load properties **/
 	function loadProperties(locationURI,locationName,positions) {
-		$("#loading_container").html("<div style='margin:auto; width:300px;'> <center> <b>Loading</b><br><br> <img style='padding-left:7px; vertical-align:center; width: 40px;' src='img/ajax-loader-search.gif'/> </center>");
+		$("#loading_container").html("<div style='margin:auto; width:300px;'> <center> <b>Loading</b><br><br> <img style='padding-left:7px; vertical-align:center; width: 40px;' src='img/ajax-loader.gif'/> </center>");
 	
 		_URIbase = "http://localhost:8890/sparql?query=";
 		// Generate the SPARQL request for retrieving the properties of 
@@ -314,7 +337,6 @@
 					 " ?obs dimension:refPeriod " +  indicatorYearURI + " ." +
 					 " ?obs property:geoArea ?geo . " +
 					 " ?geo skos:prefLabel ?label . " + 
-					 " ?obs qb:dataSet ?ds . " +
 					 " ?obs <" + propURI + "> ?val . " +
 					 " } ORDER BY desc(?val)";
 		
@@ -332,6 +354,7 @@
 					json.results.bindings && 
 					json.results.bindings.length > 0) {
 					var bindings = json.results.bindings;
+					var mean = 0;
 					var props = []
 					var len = 0;
 					for (var i=0; i<bindings.length; i++) {
@@ -341,6 +364,8 @@
 							property.val = row.val.value;
 							property.locURI = row.geo.value;
 							property.locLabel = row.label.value;
+							mean += parseFloat(property.val);
+							//Remove the administrative part from the region
 							var index = property.locLabel.indexOf("(administrative)");
 							if (index != -1)
 								property.locLabel = property.locLabel.substring(0,index);
@@ -353,11 +378,21 @@
 							props[len++] = property;
 						}
 					}
+						//add the mean
+						mean = mean / bindings.length;
+						//console.log('indicator ' + propURI + ' media ' + mean);
+						
+						var meanProperty = new Object;
+						meanProperty.val = mean;
+						meanProperty.locURI = 'Average';
+						meanProperty.locLabel = 'Average';
+						props[len++] = meanProperty;
 					
 					//indicators[propURI] = props;
 					
 					if (position != 0) {
 						//console.log('property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
+						
 						var size = positions.length;
 						var pos = new Object();
 						pos.position = position;
@@ -365,8 +400,19 @@
 						pos.propLabel = propLabel;
 						positions[size] = pos;
 						//positions[propURI]=position;
+						
+						//order the array, including the  mean
+						props.sort( function (a,b) 
+						{ 
+							return parseFloat(b.val) - parseFloat(a.val);
+						} );
+			
+						
 						indicators[propURI] = props;
 					} 
+					
+					
+					
 					
 					if (propertyIndex == properties.length -1) {
 						selectPropertiesToDisplay();
@@ -415,7 +461,7 @@
 		for (var i=0; i<props.length; i++) {
 			data.setValue(i, 0, props[i].locLabel);
 			//data.setValue(i, 0, props[i].locURI);
-			if (props[i].locURI == locationURI) {
+			if (props[i].locURI == locationURI || props[i].locURI == 'Average') {
 				data.setValue(i, 1, 0);
 				data.setValue(i, 2, parseFloat(props[i].val));			
 			}
@@ -430,7 +476,7 @@
 		$('#first-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
 		
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
-		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#072699'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } }); //,  vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
+		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#3EA471'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } }); //,  vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 	
 	}
 
@@ -452,7 +498,7 @@
 		for (var i=0; i<props.length; i++) {
 			data.setValue(i, 0, props[i].locLabel);
 			//data.setValue(i, 0, props[i].locURI);
-			if (props[i].locURI == locationURI) {
+			if (props[i].locURI == locationURI || props[i].locURI == 'Average') {
 				data.setValue(i, 1, 0);
 				data.setValue(i, 2, parseFloat(props[i].val));			
 			}
@@ -466,7 +512,7 @@
 		$('#second-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
 			
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
-		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#072699'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } } ); //vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
+		barsVisualization.draw(data, {width: 900, height: 500, colors:['#345AE3','#3EA471'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } } ); //vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 	
 	}
 	
@@ -488,7 +534,7 @@
 		for (var i=0; i<props.length; i++) {
 			data.setValue(i, 0, props[i].locLabel);
 			//data.setValue(i, 0, props[i].locURI);
-			if (props[i].locURI == locationURI) {
+			if (props[i].locURI == locationURI || props[i].locURI == 'Average') {
 				data.setValue(i, 1, 0);
 				data.setValue(i, 2, parseFloat(props[i].val));			
 			}
@@ -506,7 +552,7 @@
 		barsVisualization.draw(data, {
 			width: 900, 
 			height: 500,
-			colors:['#C82442','#8B071F'],
+			colors:['#C82442','#C6C919'],
 			isStacked:'true',
 			//is3D: true,
 			//colors:[{color:'#FF0000', darker:'#680000'}],
@@ -537,7 +583,7 @@
 		for (var i=0; i<props.length; i++) {
 			data.setValue(i, 0, props[i].locLabel);
 			//data.setValue(i, 0, props[i].locURI);
-			if (props[i].locURI == locationURI) {
+			if (props[i].locURI == locationURI || props[i].locURI == 'Average') {
 				data.setValue(i, 1, 0);
 				data.setValue(i, 2, parseFloat(props[i].val));			
 			}
@@ -555,7 +601,7 @@
 		barsVisualization.draw(data, {
 			width: 900, 
 			height: 500,
-			colors:['#C82442','#8B071F'],
+			colors:['#C82442','#C6C919'],
 			isStacked:'true',
 			//is3D: true,
 			//colors:[{color:'#FF0000', darker:'#680000'}],

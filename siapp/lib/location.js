@@ -1,5 +1,8 @@
 	$(document).ready(function() {
 		loadResources();
+		
+		
+	
 	});
 
 	function loadResources() {
@@ -39,12 +42,43 @@
 			}
 			displayRegions(cities,counties);
 			//displayRegionsOnMap();
+
+			/* toogleMenu*/
+		var toggleMenu = {
+		init : function(sContainerClass, sHiddenClass) {
+		if (!document.getElementById || !document.createTextNode) {return;} // Check for DOM support
+		var arrMenus = this.getElementsByClassName(document, 'ul', sContainerClass); // Find all menus
+		alert('p');
+		var arrSubMenus, oSubMenu, oLink;
+		for (var i = 0; i < arrMenus.length; i++) { // In each menu...
+		arrSubMenus = arrMenus[i].getElementsByTagName('ul'); // ...find all sub menus
+		for (var j = 0; j < arrSubMenus.length; j++) { // For each sub menu...
+		oSubMenu = arrSubMenus[j];
+		oLink = oSubMenu.parentNode.getElementsByTagName('a')[0]; // ...find the link that toggles it...
+		oLink.onclick = function(){toggleMenu.toggle(this.parentNode.getElementsByTagName('ul')[0], sHiddenClass); return false;} // ... add an event handler to the link...
+		this.toggle(oSubMenu, sHiddenClass); // ... and hide the sub menu
 		}
-		});
+		}
+		},
+		toggle : function(el, sHiddenClass) {
+		var oRegExp = new RegExp("(^|\\s)" + sHiddenClass + "(\\s|$)");
+		el.className = (oRegExp.test(el.className)) ? el.className.replace(oRegExp, '') : el.className + ' ' + sHiddenClass; // Add or remove the class name that hides the element
+		},
+		/* addEvent and getElementsByClassName functions omitted for brevity */
+		};
+		// Initialise the menu
+		//toggleMenu.addEvent(window, 'load', function(){toggleMenu.init('menu','hidden');});
+		}
+		});			
+			
+			
+	
 	}
 	
+
+	
 	function displayRegions(cities,counties) {
-		var html = "<div><table width='50%'><tr><th align='left' width='50%'>Counties<\/th><th align='left' width='50%'>Cities<\/th><\/tr>";
+		/*var html = "<div><table width='50%'><tr><th align='left' width='50%'>Counties<\/th><th align='left' width='50%'>Cities<\/th><\/tr>";
 		var indicatorPage = "indicator.html";
 		//we know there are more counties than cities
 		for(var i = 0; i < counties.length; i++) {
@@ -55,19 +89,34 @@
 			regionName = county.label;
 			if (i<cities.length) {
 				city = cities[i];
-				/*html += "<tr><td>" +
+				*html += "<tr><td>" +
 					"<a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"' style='text-decoration: none;'>" + county.label + "<\/a><\/td>" +
-					"<td><a href='"+ indicatorPage +"?uri="+city.uri+"&name="+city.label+"' style='text-decoration: none;'>" + city.label + "<\/a><\/td><\/tr>" ;*/
+					"<td><a href='"+ indicatorPage +"?uri="+city.uri+"&name="+city.label+"' style='text-decoration: none;'>" + city.label + "<\/a><\/td><\/tr>" ;*
 				html += "<tr><td>" +
-						"<ul id='dhtmlgoodies_menu'>" +
-						"<li> <a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"'>"  + county.label + "<\/a><\/li><\/td>" +
-						"<td> <ul id='dhtmlgoodies_menu'> <li><a href='"+ indicatorPage +"?uri="+city.uri+"&name="+city.label+"' style='text-decoration: none;'>" + city.label + "<\/a><\/li><\/td><\/tr>" ;
+						"<a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"'>"  + county.label + "<\/a><\/li><\/td>" +
+						"<td><a href='"+ indicatorPage +"?uri="+city.uri+"&name="+city.label+"' style='text-decoration: none;'>" + city.label + "<\/a><\/td><\/tr>" ;
 			}
 			else
-				html += "<td><ul id='dhtmlgoodies_menu'>" +
-						"<li><a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"' style='text-decoration: none;'>" + county.label + "<\/a><\/li><\/td><td><\/td><\/tr>";
+				html += "<td>" +
+						"<a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"' style='text-decoration: none;'>" + county.label + "<\/a><\/td><td><\/td><\/tr>";
 		}
 		html += "<\/tr><\/td><\/table><\/div>";
+		$("#content-holder").html(html);*/
+
+		var html = "<ul class='menu'>";
+		var indicatorPage = "indicator.html";
+		html += "<li><a href='#'>Counties<\/a><ul>" ;
+		
+		for(var i = 0; i < counties.length; i++) {
+			var county = counties[i];
+			html += "<li><a href='"+ indicatorPage +"?uri="+county.uri+"&name="+county.label+"'>" + county.label + "<\/a><\/li>";
+		}
+		html += "<\/ul><\/li><li><a href='#'>Cities<\/a><ul>"
+		for(var i = 0; i < cities.length; i++) {
+			var city = cities[i];
+			html += "<li><a href='"+ indicatorPage +"?uri="+city.uri+"&name="+city.label+"'>" + city.label + "<\/a><\/li>";
+		}
+		html +="<\/ul><\/li></ul>";
 		$("#content-holder").html(html);
 	}
 	
