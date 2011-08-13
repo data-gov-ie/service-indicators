@@ -1,4 +1,5 @@
 	var locationName;
+	var locationName;
 	var locationURI;
 	
 	var indicatorYearURI = "<http://reference.data.gov.uk/id/year/2009>";
@@ -9,37 +10,90 @@
 	var indicators = [];
 	var positions = [];
 	
-	
+	var aboutLink = "javascript:alert(\"Service Indicators of Ireland\");";
+
+	var codeLink = "https://github.com/mhausenblas/service-indicators";
+
 	
 	$(document).ready(function() {
 		document.getElementById('result-container').style.display='none';
-
-		var uri = getUrlVars()["uri"];
-		var name = getUrlVars()["name"];
-		locationURI = uri;
-		name = decodeURIComponent(name);
-		locationName = name;
-		
-		$("#location-title-holder").html(locationName);
-		$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
-		
-		loadProperties(locationURI,locationName,positions);
-
-		loadThirdPartyData(uri,name);
-		
-		//setupAutoComplete();
-		/*var uri = getUrlVars()["uri"];
-		var name = getUrlVars()["name"];
-		locationURI = uri;
-		name = decodeURIComponent(name);
-		locationName = name;
-		loadProperties(locationURI,locationName,positions);	
-		loadThirdPartyData(uri,name);
-		$("#location-title-holder").html(locationName);
-		$("#location-main-holder").html("<a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> " + "- " +indicatorYear);*/
+		loadProperties(positions);
 		
 	});
 	
+	
+	function setRegion(uri,label) {
+		locationName = label.trim();
+		locationURI = uri;
+		$("#location-title-holder").html(locationName);
+		$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
+		
+		loadThirdPartyData(locationURI,locationName);
+		
+		loadIndicators(locationURI);			
+
+	}
+	
+	function loadRegions() {
+
+		var _resourceType_County = "http://geo.data-gov.ie/AdministrativeCounty";
+		var _resourceType_City = "http://geo.data-gov.ie/City";			
+		var _nameProperty = "http://www.w3.org/2000/01/rdf-schema#label";
+
+		var sparql =
+					"SELECT ?uri ?label WHERE { " +
+						"?uri <http://www.w3.org/2004/02/skos/core#inScheme> <http://stats.data-gov.ie/codelist/geo/top-level> . ?uri <http://www.w3.org/2004/02/skos/core#prefLabel> ?label . " +
+						" { ?uri a <" + _resourceType_County + "> } UNION { ?uri a <" + _resourceType_City + "> } } ORDER BY ?uri ";
+
+		var _URIbase = "http://data-gov.ie/sparql?query=";
+
+		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
+
+		$.getJSON(queryURLBase, function(data, textStatus){
+		if(data.results) {
+			var rows = data.results.bindings;
+			var cities = [];
+			var counties = [];
+			var iCities = 0;
+			var iCounties = 0;
+			for(i in rows) {
+				var row = rows[i];
+				var region = new Object;
+				region.uri = row.uri.value;
+				index = row.label.value.indexOf("(administrative)");
+				if (index != -1)
+					region.label = row.label.value.substring(0,index);
+				else
+					region.label = row.label.value;
+				if (row.label.value.indexOf("City")!=-1) 
+					cities[iCities++] = region; 
+				else
+					counties[iCounties++] = region;
+			}
+			displayRegions(cities,counties);
+		}	
+	});
+		
+	}
+	
+	
+	function displayRegions(cities,counties) {
+		var html = "<div id='menu'><ul><li><h2>County<\/h2><ul>";
+		
+		for(var i = 0; i < counties.length; i++) {
+			var county = counties[i];
+			html += "<li><a href=\"javascript:setRegion('"+county.uri+"','"+county.label+"');\">" + county.label + "<\/a><\/li>";
+		}
+		html += "<\/ul><\/li><\/ul><ul><li><h2>City<\/h2><ul>"
+		for(var i = 0; i < cities.length; i++) {
+			var city = cities[i];
+			html += "<li><a href=\"javascript:setRegion('"+city.uri+"','"+city.label+"');\">" + city.label + "<\/a><\/li>";
+		}
+		html +="<\/ul><\/li><\/ul><ul><li><h2>&nbsp;<\/h2><\/li><\/ul><ul><li><a href='" + aboutLink + "' class='nivel1'>ABOUT</a><\/li><\/ul>" +							
+			   "<ul><li><a href='" + codeLink + "' target='_blank' class='nivel1'>CODE</a></li></ul><\/div>"							
+		$("#content-holder").html(html);
+	}
+
 	/** General purpose functions **/
 	function getUrlVars() {
 		var vars = [], hash;
@@ -54,24 +108,6 @@
 	}
 	
 	function switchLayers() {
-	/*	document.getElementById('result-container').style.display='none';
-		document.getElementById('homesearch').style.display='block';
-
-		$("#homesearch #name").val('');
-		$('#homesearch #name').css('color', '#000');
-		$("#homesearch #name").click(function() {
-		if (true) {
-			$("#homesearch #name").val('');
-			$('#homesearch #name').css('color', '#000');
-		}
-		});
-		$("#homesearch #name").focus();
-		
-		$("#content-holder").html("");
-		var html = "<table class=\"externalInfo\"><tr><td class=\"externalInfo\"><br><div id=\"dbpedia-content-holder\"><\/div><br><div id=\"census-content-holder\"><\/div><\/td><\/tr><\/table>" +
-				   "<table class=\"chart\"><tr><td><div id=\"chart_div_top_1\"><\/div><\/td><td><div id=\"chart_div_top_2\"><\/div><\/td><\/tr>" +
-				   "<tr><td><div id=\"chart_div_bottom_1\"><\/div><\/td><td><div id=\"chart_div_bottom_2\"><\/div><\/td><\/tr><\/table>";
-		$("#tables").html(html);*/
 	}
 	
 	/** Functions related to the DBpedia **/
@@ -138,7 +174,7 @@
 			jsonp :'callback',
 			url : queryURLBase,
 			error : function () {
-					alert('error al llamar a dbpedia');
+					//alert('error al llamar a dbpedia');
 			},
 			success : function(json) {
 				
@@ -168,11 +204,6 @@
 	
 	/** Function to display dbpedia data for a given city/county - region is an internal object **/
 	function displayDBpediaData(region) {
-		
-		//$("#location-title-holder").html(locationName);
-		//$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
-			
-		//$("#location-main-holder").html();
 		
 		var img = "img/no-image.gif";
 		
@@ -266,7 +297,7 @@
 	/** Functions related to the service indicators **/
 	
 	/** Function to load properties **/
-	function loadProperties(locationURI,locationName,positions) {
+	function loadProperties(lpositions) {
 		$("#loading_container").html("<div style='margin:auto; width:300px;'> <center> <b>Loading</b><br><br> <img style='padding-left:7px; vertical-align:center; width: 40px;' src='img/ajax-loader.gif'/> </center>");
 	
 		_URIbase = "http://localhost:8890/sparql?query=";
@@ -301,7 +332,7 @@
 						properties[i] = property;
 					}
 					for (var i=0;i<properties.length; i++) {
-						calculatePosition(properties[i].uri,properties[i].label,locationURI,i);
+						calculatePosition(properties[i].uri,properties[i].label,i);
 					}
 				} 
 				// If we did not find any property
@@ -321,7 +352,7 @@
 		locationURI - URI of the city/county
 		propertyIndex - index of the current property
 	**/	
-	function calculatePosition(propURI,propLabel,locationURI,propertyIndex) {
+	function calculatePosition(propURI,propLabel,propertyIndex) {
 		_URIbase = "http://localhost:8890/sparql?query=";
 		position = 0;
 		
@@ -370,11 +401,11 @@
 							if (index != -1)
 								property.locLabel = property.locLabel.substring(0,index);
 							property.label = propLabel;
-							
+							/* do it later
 							if (property.locURI == locationURI) {
 								position = i+1;
 								value = property.val;
-							}
+							}*/
 							props[len++] = property;
 						}
 					}
@@ -387,9 +418,15 @@
 						meanProperty.locURI = 'Average';
 						meanProperty.locLabel = 'Average';
 						props[len++] = meanProperty;
+						
+						props.sort( function (a,b) 
+						{ 
+							return parseFloat(b.val) - parseFloat(a.val);
+						} );
+
 					
-					//indicators[propURI] = props;
-					
+					indicators[propURI] = props;
+					/* do it later
 					if (position != 0) {
 						//console.log('property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
 						
@@ -409,19 +446,72 @@
 			
 						
 						indicators[propURI] = props;
-					} 
+					} */
 					
 					
 					
 					
 					if (propertyIndex == properties.length -1) {
-						selectPropertiesToDisplay();
+						//selectPropertiesToDisplay();
+						loadRegions();
+						document.getElementById('loading_container').style.display='none';
+
 					}
 				} 
 			}
 		});
 	}
 
+	
+	function loadIndicators(locationURI) {
+		var position;
+		for (var i in indicators) {
+			//console.log(i + ' ' + indicators[i]);
+			//console.log(indicators[i].lo
+			position = 0;
+			var props = indicators[i];
+			for (var k=0;k<props.length;k++) {
+				var property = props[k];
+				if (property.locURI == locationURI) {
+					position = k+1;
+					value = property.val;
+				}
+			}
+			
+			if (position != 0) {
+				//console.log('property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
+				var size = positions.length;
+				var pos = new Object();
+				pos.position = position;
+				pos.propURI = i;
+				positions[size] = pos;
+						/*
+						var size = positions.length;
+						var pos = new Object();
+						pos.position = position;
+						pos.propURI = propURI;
+						pos.propLabel = propLabel;
+						positions[size] = pos;
+						//positions[propURI]=position;
+						
+						//order the array, including the  mean
+						props.sort( function (a,b) 
+						{ 
+							return parseFloat(b.val) - parseFloat(a.val);
+						} );
+			
+						
+						indicators[propURI] = props;
+						*/
+				
+			} 
+		}
+		
+		selectPropertiesToDisplay();
+		
+		positions = [];
+		
+	}
 	
 	/** Function to select the properties to display, two top properties, and two bottom properties **/	
 	function selectPropertiesToDisplay() {

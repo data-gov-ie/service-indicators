@@ -1,0 +1,30 @@
+body {
+behavior: url(csshover.htc); /* call hover behaviour file */
+font-size: 100%; /* enable IE to resize em fonts */
+} 
+#menu ul li {
+float: left; /* cure IE5.x "whitespace in lists" problem */
+width: 100%;
+}
+#menu ul li a {
+height: 1%; /* make links honour display: block; properly */
+} 
+
+#menu a, #menu h2 {
+font: bold 0.7em/1.4em arial, helvetica, sans-serif; 
+/* if required use em's for IE as it won't resize pixels */
+} 
+
+
+
+body {
+behavior: url(csshover.htc);
+font-size: 100%;
+}
+
+#menu ul li {float: left; width: 100%;}
+#menu ul li a {height: 1%;} 
+
+#menu a, #menu h2 {
+font: bold 0.7em/1.4em arial, helvetica, sans-serif;
+}

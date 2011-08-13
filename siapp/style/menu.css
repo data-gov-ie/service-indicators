@@ -1,0 +1,143 @@
+/*The CSS removes the padding/margin and bullets from all the lists, sets the width of the the entire menu and styles the links and heading to suit.*/
+
+#menu {
+width: 12em; /* set width of menu */
+background: #0B0A54;
+} 
+
+#menu ul { /* remove bullets and list indents */
+list-style: none;
+margin: 0;
+padding: 0;
+}
+
+/* style, color and size links and headings to suit */
+#menu a, #menu h2 {
+font: bold 11px/16px Tienne, arial, helvetica, sans-serif;
+display: block;
+border-width: 1px;
+border-style: solid;
+border-color: #ccc #888 #555 #bbb;
+margin: 0;
+padding: 2px 3px;
+background: #0B0A54;
+}
+
+#menu h2 {
+color: #fff;
+background: #0B0A54;
+text-transform: uppercase;
+}
+
+#menu a {
+color: #000;
+background: #0B0A54;
+text-decoration: none;
+}
+
+#menu a:hover {
+color: #a00;
+background: #8ABDE9;
+}
+
+#menu a.nivel1 {
+color: #FFF;
+background: #0B0A54;
+text-decoration: none;
+}
+#menu a.nivel1:hover {
+color: #000;
+background: #8ABDE9;
+}
+
+
+/*Positioning the Pop Outs*/
+#menu li {
+/* make the list elements a containing block for the nested lists */
+position: relative;
+} 
+
+#menu ul ul ul {
+position: absolute;
+top: 0;
+left: 100%; /* to position them to the right of their containing block */
+width: 100%; /* width is based on the containing block */
+}
+
+/* Hiding and Revealing using :hover */
+div#menu ul ul ul,
+div#menu ul ul li:hover ul ul
+{display: none;}
+
+div#menu ul ul li:hover ul,
+div#menu ul ul ul li:hover ul
+{display: block;}
+
+/* Horizontal CSS Dropdown and Popout Menu */
+#menu {
+width: 100%;
+background: #0B0A54;
+float: left;
+}
+#menu ul {
+list-style: none;
+margin: 0;
+padding: 0;
+width: 12em;
+float: left;
+}
+
+/* Then we apply the required formatting to the <h2> headings and the <a> anchors, again I'm using the same formatting as the vertical menu */
+#menu a, #menu h2 {
+font: bold 11px/16px Tienne, arial, helvetica, sans-serif;
+display: block;
+border-width: 1px;
+border-style: solid;
+border-color: #ccc #888 #555 #bbb;
+margin: 0;
+padding: 2px 3px;
+background: #8ABDE9;
+}
+
+#menu h2 {
+color: #fff;
+background: #0B0A54;
+text-transform: uppercase;
+}
+
+#menu a {
+color: #000;
+background: #8ABDE9;
+text-decoration: none;
+}
+
+#menu a:hover {
+color: #fff;
+background: #0B0A54;
+}
+
+
+/* Positioning the Popout Menus and Dropdown Menus */
+#menu li {position: relative;}
+
+#menu ul ul {
+position: absolute;
+z-index: 500;
+}
+
+#menu ul ul ul {
+top: 0;
+left: 100%;
+}
+
+/* Hiding and Revealing using :hover */
+div#menu ul ul,
+div#menu ul li:hover ul ul,
+div#menu ul ul li:hover ul ul
+{display: none;}
+
+div#menu ul li:hover ul,
+div#menu ul ul li:hover ul,
+div#menu ul ul ul li:hover ul
+{display: block;}
+
