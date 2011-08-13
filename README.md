@@ -1,4 +1,3 @@
-Service Indicators app
+# Service Indicators app
 
-Structure
-- siapp folder contains the application files, html, js, css, etc.
+* siapp folder contains the application files, html, js, css, etc.
