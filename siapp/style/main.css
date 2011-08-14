@@ -214,12 +214,21 @@ table.chart td {
 	text-align: left;
 	vetical-align: top;
 	font-family: 'Tienne', serif;
-	font-size: 16px;
+	font-size: 12px;
 	color: #616161;
 	font-weight: bold;
 	#text-shadow: 4px 4px 4px #aaa;
 }
 
+.position-top-description{
+	text-align: left;
+	vetical-align: top;
+	font-family: 'Tienne', serif;
+	font-size: 14px;
+	color: #616161;
+	font-weight: bold;
+	#text-shadow: 4px 4px 4px #aaa;
+}
 .service-title{
 	text-align: center;
 	font-family: 'Tienne', sans-serif;
