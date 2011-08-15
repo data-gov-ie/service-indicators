@@ -23,13 +23,9 @@
 			loadProperties(positions,true);
 		}
 		else if (locParameterURI!="" && window.locationName == undefined) {
+			document.getElementById('result-container').style.display='none';
 			locParameterURI = locParameterURI.replace("-"," ");
 			validateLocation(locParameterURI);
-			//we have to validate the county/city name and then 
-			//document.getElementById('result-container').style.display='none';
-			//loadProperties(positions,false);, pero sin llamar a las regiones
-			//setRegion(uri,label);
-			alert('intento de llamada por uri - por decir algo');
 		}
 	});
 	
@@ -45,16 +41,16 @@
 	}
 	
 	function validateLocation(locParameterURI) {
-		
 		var sparql = buildQueryForCheckingLocation(locParameterURI);
-		var _URIbase = "http://data-gov.ie/sparql?query=";
+		//var _URIbase = "http://data-gov.ie/sparql?query=";
+		var _URIbase = "http://localhost:8890/sparql?query=";
 		var Url = _URIbase + escape(sparql) + "&format=json";
 		$.ajax( {
 			dataType :'jsonp',
 			jsonp :'callback',
 			url : Url,
-			error : function () {
-					//alert('error al llamar a dbpedia');
+			error : function (jqXHR, textStatus, errorThrown) {
+					alert('error al validar los locations ' + textStatus);
 			},
 			success : function(json) {
 				if( json && 
@@ -62,28 +58,26 @@
 					json.results.bindings && 
 					json.results.bindings.length > 0) {
 					var rows = json.results.bindings;
+			
 					for(var i=0; i<rows.length; i++) {
 						var row = rows[i];
 						var label = row.label.value;
 						if (label.indexOf("County")!=-1 && label.indexOf("administrative") != -1) {
-							locationName = row.label.value;
+							var index = label.indexOf("(administrative)");
+							if (index != -1)
+								label = label.substring(0,index);
+							locationName = label;
 							locationURI = row.uri.value;
 						}
 						if (label.indexOf("City") != -1 ) {
 							locationName = row.label.value;
 							locationURI = row.uri.value;
-						
 						}
 					}
-					alert('ahora entro');
-					document.getElementById('result-container').style.display='none';
 					loadProperties(positions,false);
-					loadThirdPartyData(locationURI,locationName);
-					loadIndicators(locationURI);			
-					loadIndicatorsHierarchy();
 				}
 				else {
-					$(document).html("There is no information in this sever about this resource");
+					$("#loading_container").html("<center><b>There is no information in this sever about " + locParameterURI + "<\/b><\/center>");
 				}
 		}});
 	}
@@ -103,9 +97,7 @@
 		$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
 		
 		loadThirdPartyData(locationURI,locationName);
-		
 		loadIndicators(locationURI);			
-		
 		loadIndicatorsHierarchy();
 	}
 	
@@ -118,14 +110,53 @@
 		var _nameProperty = "http://www.w3.org/2000/01/rdf-schema#label";
 
 		var sparql =
-					"SELECT ?uri ?label WHERE { " +
+					"SELECT distinct ?uri ?label WHERE { " +
 						"?uri <http://www.w3.org/2004/02/skos/core#inScheme> <http://stats.data-gov.ie/codelist/geo/top-level> . ?uri <http://www.w3.org/2004/02/skos/core#prefLabel> ?label . " +
 						" { ?uri a <" + _resourceType_County + "> } UNION { ?uri a <" + _resourceType_City + "> } } ORDER BY ?uri ";
 
-		var _URIbase = "http://data-gov.ie/sparql?query=";
+		//var _URIbase = "http://data-gov.ie/sparql?query=";
+		var _URIbase = "http://localhost:8890/sparql?query=";
 
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
 
+		
+		$.ajax( {
+			dataType :'jsonp',
+			jsonp :'callback',
+			url : queryURLBase,
+			error : function (jqXHR, textStatus, errorThrown) {
+
+			},
+			success : function(json) {
+
+				if( json && 
+					json.results && 
+					json.results.bindings && 
+					json.results.bindings.length > 0) {
+					var rows = json.results.bindings;
+					var cities = [];
+					var counties = [];
+					var iCities = 0;
+					var iCounties = 0;
+					for(i in rows) {
+						var row = rows[i];
+						var region = new Object;
+						region.uri = row.uri.value;
+						index = row.label.value.indexOf("(administrative)");
+						if (index != -1)
+							region.label = row.label.value.substring(0,index);
+						else
+							region.label = row.label.value;
+						if (row.label.value.indexOf("City")!=-1) 
+							cities[iCities++] = region; 
+						else
+							counties[iCounties++] = region;
+					}
+
+					displayRegions(cities,counties);
+				}
+		}});
+		/*
 		$.getJSON(queryURLBase, function(data, textStatus){
 			if(data.results) {
 				var rows = data.results.bindings;
@@ -133,6 +164,7 @@
 				var counties = [];
 				var iCities = 0;
 				var iCounties = 0;
+								alert('inside json loadregions');
 				for(i in rows) {
 					var row = rows[i];
 					var region = new Object;
@@ -147,15 +179,15 @@
 					else
 						counties[iCounties++] = region;
 				}
+				alert('displayregions');
 				displayRegions(cities,counties);
 			}	
-		});
+		});*/
 	}
 	
 	/* Display the regions in a menu bar */
 	function displayRegions(cities,counties) {
 		var html = "<div id='menu'><ul><li><h2>County<\/h2><ul>";
-		
 		for(var i = 0; i < counties.length; i++) {
 			var county = counties[i];
 			var uname = county.label.replace(" ","-");
@@ -188,13 +220,12 @@
 	/** General purpose functions **/
 	function getUrlVars(specialChar) {
 		var thisURI = window.location.href;
-		console.log(thisURI);
 		
 		if (thisURI.indexOf(specialChar)==-1)
 			return "";
 		var vars = [], hash;
 		var hashes = window.location.href.split(specialChar);
-		console.log(hashes);
+
 		if (hashes.length > 1)
 			return hashes[1];
 		return "";
@@ -364,7 +395,7 @@
 	/** Function to load data from external resources **/
 	function loadThirdPartyData(uri, name) {
 		loadDBpediaData(uri, name); //there are some problems now ...
-		loadCensusData(uri,name);
+		//loadCensusData(uri,name);
 	}
 	
 	
@@ -525,16 +556,20 @@
 						indicators[propURI] = props;
 					} */
 					
-					
-					
-					
 					if (propertyIndex == properties.length -1) {
 						//selectPropertiesToDisplay();
 						if (willLoadRegions) {
 							loadRegions();
 							document.getElementById('loading_container').style.display='none';
 						}
-
+						else {
+							$("#location-title-holder").html(locationName);
+							$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
+							document.getElementById('result-container').style.display='block';
+							loadThirdPartyData(locationURI,locationName);
+							loadIndicators(locationURI);			
+							loadIndicatorsHierarchy();
+						}
 					}
 				} 
 			}
@@ -563,8 +598,8 @@
 				var pos = new Object();
 				pos.position = position;
 				pos.propURI = i;
-				alert('--------' + i);
 				positions[size] = pos;
+				//positions[i] = pos;
 						/*
 						var size = positions.length;
 						var pos = new Object();
@@ -600,9 +635,6 @@
 			{ 
 				return b.position - a.position;
 			} );
-			
-			
-			
 		displayChartTopProperty1(positions[positions.length-1].propURI,positions[positions.length-1].position,1);
 		displayChartTopProperty2(positions[positions.length-2].propURI,positions[positions.length-2].position,2);
 		displayChartBottomProperty1(positions[1].propURI,positions[1].position,1);
@@ -637,14 +669,13 @@
 			else
 				data.setValue(i, 1, parseFloat(props[i].val));
 		}
-		alert(topProperty);
-		loadIndicatorParents(topProperty,'first-position-parents-description');
+
+		loadIndicatorParents(topProperty,'first-position-parents-description',props[0].label);
 		
 		$('#first-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
-		$('#first-position-description').html("<p class='position-description'>\t" + props[0].label +"</p>");		
 		
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
-		barsVisualization.draw(data, {width: 900, height: 500, colors:['#736F6E','#382D2C','#306754'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } }); //,  vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
+		barsVisualization.draw(data, {width: 900, height: 500, colors:['#736F6E','#382D2C','#306754'], legend:'top', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } }); //,  vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 	
 	}
 
@@ -675,10 +706,9 @@
 		
 		}
 		
-		loadIndicatorParents(topProperty,'second-position-parents-description');
+		loadIndicatorParents(topProperty,'second-position-parents-description',props[0].label );
 
 		$('#second-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
-		$('#second-position-description').html("<p class='position-description'>\t" + props[0].label +"</p>");		
 			
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
 		barsVisualization.draw(data, {width: 900, height: 500, colors:['#736F6E','#382D2C','#306754'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } } ); //vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
@@ -712,11 +742,9 @@
 		
 		}
 	
-		loadIndicatorParents(bottomProperty,'first-last-position-parents-description');
+		loadIndicatorParents(bottomProperty,'first-last-position-parents-description',props[0].label );
 		
 		$('#first-last-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
-		$('#first-last-position-description').html("<p class='position-description'>\t" + props[0].label +"</p>");		
-
 			
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_'+index));
 		barsVisualization.draw(data, {
@@ -761,10 +789,9 @@
 
 		}
 		
-		loadIndicatorParents(bottomProperty,'second-last-position-parents-description');
+		loadIndicatorParents(bottomProperty,'second-last-position-parents-description',props[0].label );
 
 		$('#second-last-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
-		$('#second-last-position-description').html("<p class='position-description'>" + props[0].label +"</p>");		
 
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_'+index));
 		barsVisualization.draw(data, {
@@ -786,17 +813,15 @@
 					" WHERE { " +
 					"<" + indicatorURI  + "> qb:concept ?concept . " +
 					" ?concept skos:broader ?supcon1 . " +
-					" ?concept skos:altLabel ?supcon1label . " +
+					" ?supcon1 skos:altLabel ?supcon1label . " +
 					" OPTIONAL { ?supcon1 skos:broader ?supcon2 .  " +
 					" ?supcon2 skos:altLabel ?supcon2label . " + 
 					"   } " +
 					" } ";		
-					
 		return query;
 	}
 		
-	function loadIndicatorParents (indicatorURI,divElement) {
-		alert(indicatorURI + ' ' + divElement);
+	function loadIndicatorParents (indicatorURI,divElement,indicatorLabel) {
 		_URIbase = "http://localhost:8890/sparql?query=";	
 		var sparql = buildIndicatorParentsQuery(indicatorURI);
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
@@ -817,16 +842,17 @@
 					for(var i=0; i<rows.length; i++) {
 						var row = rows[i];
 						var parent = new Object;
-						parent.first = row.supcon1label.value;
-						parent.second = row.supcon2label.value;						
+						parent.second = row.supcon1label.value;
+						parent.first = row.supcon2label.value;						
 						parents[i] = parent;
 					}
 					
 					if (parents.length>0) {
 						if (parents[0].second)
-							$('#'+divElement).html("<ul><li><p class='position-top-description'>" + parents[0].second + "<\/p><\/li><ul><li><p class='position-top-description'>" +  parents[0].first +  "<\/p></li><\/ul><\/ul>");
+							$('#'+divElement).html("<div class='indicator-description'><ul><li>" + parents[0].first +"<\/li><ul><li>"+parents[0].second+"<\/li>" +
+												  "<ul><li>"+ indicatorLabel +"<\/li><\/ul><\/ul><\/ul><\/div>");
 						else
-							$('#'+divElement).html("<ul><li><p class='position-top-description'>" + parents[0].first + "<\/p><\/li><\/ul>");
+							$('#'+divElement).html("<div class='indicator-description'><ul><li>" + parents[0].first + "<\/li><ul><li>"+indicatorLabel +"<\/li><\/ul><\/ul><\/div>");
 					}
 				}
 		}});		

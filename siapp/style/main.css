@@ -260,27 +260,38 @@ a:link{
 	text-decoration: none; 
 }
 
+.indicator-description {
+	text-align: left;
+	vetical-align: top;
+	font-family: 'Tienne', serif;
+	font-size: 16px;
+	color: #616161;
+	font-weight: bold;
+} 
 
-.menu,
-.menu ul {
-margin:0;
-padding:0;
-list-style:none;
+.indicator-description ul { 
+  margin-left:1em; 
+  padding-left:0.2em; 
+  margin-bottom:1em;
+  font-size: 16px;
 }
-.menu {width:200px;}
-.menu li {
-margin:0;
-padding:0;
-margin-bottom:1px;
+
+.indicator-description ul ul {
+  margin-left:1em; 
+  padding-left:0.2em; 
+  margin-bottom:1em;
+  font-size: 14px;  
 }
-.menu a {
-display:block;
-padding:2px 5px;
-color:#000;
-background:#b0c23d;
-text-decoration:none;
+
+.indicator-description ul ul ul {
+  margin-left:1em; 
+  padding-left:0.2em; 
+  margin-bottom:1em;
+  font-size: 12px;    
 }
-.menu a:hover {background:#d9dcb0;}
-.menu ul li {padding-left:15px;}
-.menu ul a {background:#ced174;}
-.hidden {display:none;}
+
+.indicator-description li {
+  padding-left: 0.1em; 
+  list-style: disc;
+  list-style-position: inside;
+} 
