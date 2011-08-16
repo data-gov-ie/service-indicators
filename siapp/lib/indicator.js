@@ -4,9 +4,9 @@
 	
 	var indicatorYearURI = "<http://reference.data.gov.uk/id/year/2009>";
 	var indicatorYear = "2009";
-	
+	var datasetGraph = "<http://data-gov.ie/graph/ssi>";
+	var si2009Scheme = "<http://stats.data-gov.ie/codelist/geo/service-indicators-2009>";
 	var properties = [];
-	
 	var indicators = [];
 	var positions = [];
 	
@@ -14,91 +14,57 @@
 
 	var codeLink = "https://github.com/data-gov-ie/service-indicators";
 
-	
+	//var queryServer = "http://localhost:8890/sparql?query=";
+	var queryServer = "http://data-gov.ie/sparql?query=";
+
+	/* */
 	$(document).ready(function() {
 		var locParameterURI = getUrlVars('#'); //is there sth like #region-name?
-
-		if (locParameterURI=="" && window.locationName == undefined) {
-			document.getElementById('result-container').style.display='none';
-			loadProperties(positions,true);
+		
+		if (locParameterURI=="" && window.locationName == undefined) { //Access to the app from the first page - no parameteres
+			buildFirstPageSkeleton();
+			switchLayers('home');
+			loadIndicatorsObservations();
+			loadRegions();
 		}
-		else if (locParameterURI!="" && window.locationName == undefined) {
-			document.getElementById('result-container').style.display='none';
-			locParameterURI = locParameterURI.replace("-"," ");
-			validateLocation(locParameterURI);
+		else if (locParameterURI!="" && window.locationName == undefined) { //Access to the app asking for a uri of a particular county
+			//$('#result-container').hide();
+			//locParameterURI = locParameterURI.replace("-"," ");
+			//validateLocation(locParameterURI);
 		}
 	});
 	
-	function buildQueryForCheckingLocation(locParameterURI) {
-		var sparql =
-					"SELECT distinct ?uri ?label WHERE { " +
-						"?uri <http://www.w3.org/2004/02/skos/core#inScheme> <http://stats.data-gov.ie/codelist/geo/top-level> . ?uri <http://www.w3.org/2004/02/skos/core#prefLabel> ?label . " +
-						" ?uri <http://www.w3.org/2004/02/skos/core#prefLabel> ?label . " +
-						" FILTER(REGEX(STR(?label), \"" + locParameterURI + "\" )) . " +
-						"} ";
-		return sparql;
 	
-	}
-	
-	function validateLocation(locParameterURI) {
-		var sparql = buildQueryForCheckingLocation(locParameterURI);
-		//var _URIbase = "http://data-gov.ie/sparql?query=";
-		var _URIbase = "http://localhost:8890/sparql?query=";
-		var Url = _URIbase + escape(sparql) + "&format=json";
-		$.ajax( {
-			dataType :'jsonp',
-			jsonp :'callback',
-			url : Url,
-			error : function (jqXHR, textStatus, errorThrown) {
-					alert('error al validar los locations ' + textStatus);
-			},
-			success : function(json) {
-				if( json && 
-					json.results && 
-					json.results.bindings && 
-					json.results.bindings.length > 0) {
-					var rows = json.results.bindings;
+	/*  function to hide/show layers - parameter page contains "home" "results"*/
+	function switchLayers(page) {
+		if (page=='home') {
+			$('#result-container').hide();
+			$('#map-content-holder').show();
+			$('#regions-content-holder').show();
+			$("#title-content-holder").show();
 			
-					for(var i=0; i<rows.length; i++) {
-						var row = rows[i];
-						var label = row.label.value;
-						if (label.indexOf("County")!=-1 && label.indexOf("administrative") != -1) {
-							var index = label.indexOf("(administrative)");
-							if (index != -1)
-								label = label.substring(0,index);
-							locationName = label;
-							locationURI = row.uri.value;
-						}
-						if (label.indexOf("City") != -1 ) {
-							locationName = row.label.value;
-							locationURI = row.uri.value;
-						}
-					}
-					loadProperties(positions,false);
-				}
-				else {
-					$("#loading_container").html("<center><b>There is no information in this sever about " + locParameterURI + "<\/b><\/center>");
-				}
-		}});
+			positions = [];
+		}
+		else if (page=='results') {
+			$('#result-container').show();
+			$('#map-content-holder').hide();
+			$('#regions-content-holder').hide();
+			$("#title-content-holder").hide();			
+		}
 	}
-	
-	
-	/* Once the user has selected a region, we show the data for that region */
-	function setRegion(uri,label) {
-		locationName = label.trim();
-		locationURI = uri;
-		label = label.replace(" ","-");
-		var cur_url = window.location.href.indexOf("#");
-		if (cur_url!=-1)
-			window.location.href = window.location.href.subString(0,cur_url-1)
-			
-		window.location.href = window.location.href + "#" + label;
-		$("#location-title-holder").html(locationName);
-		$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
+
+	/** General purpose functions **/
+	function getUrlVars(specialChar) {
+		var thisURI = window.location.href;
 		
-		loadThirdPartyData(locationURI,locationName);
-		loadIndicators(locationURI);			
-		loadIndicatorsHierarchy();
+		if (thisURI.indexOf(specialChar)==-1)
+			return "";
+		var vars = [], hash;
+		var hashes = window.location.href.split(specialChar);
+
+		if (hashes.length > 1)
+			return hashes[1];
+		return "";
 	}
 	
 	
@@ -114,12 +80,10 @@
 						"?uri <http://www.w3.org/2004/02/skos/core#inScheme> <http://stats.data-gov.ie/codelist/geo/top-level> . ?uri <http://www.w3.org/2004/02/skos/core#prefLabel> ?label . " +
 						" { ?uri a <" + _resourceType_County + "> } UNION { ?uri a <" + _resourceType_City + "> } } ORDER BY ?uri ";
 
-		//var _URIbase = "http://data-gov.ie/sparql?query=";
-		var _URIbase = "http://localhost:8890/sparql?query=";
+		var _URIbase = queryServer;
 
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
 
-		
 		$.ajax( {
 			dataType :'jsonp',
 			jsonp :'callback',
@@ -128,7 +92,6 @@
 
 			},
 			success : function(json) {
-
 				if( json && 
 					json.results && 
 					json.results.bindings && 
@@ -152,46 +115,22 @@
 						else
 							counties[iCounties++] = region;
 					}
-
+					
 					displayRegions(cities,counties);
 				}
 		}});
-		/*
-		$.getJSON(queryURLBase, function(data, textStatus){
-			if(data.results) {
-				var rows = data.results.bindings;
-				var cities = [];
-				var counties = [];
-				var iCities = 0;
-				var iCounties = 0;
-								alert('inside json loadregions');
-				for(i in rows) {
-					var row = rows[i];
-					var region = new Object;
-					region.uri = row.uri.value;
-					index = row.label.value.indexOf("(administrative)");
-					if (index != -1)
-						region.label = row.label.value.substring(0,index);
-					else
-						region.label = row.label.value;
-					if (row.label.value.indexOf("City")!=-1) 
-						cities[iCities++] = region; 
-					else
-						counties[iCounties++] = region;
-				}
-				alert('displayregions');
-				displayRegions(cities,counties);
-			}	
-		});*/
 	}
 	
 	/* Display the regions in a menu bar */
 	function displayRegions(cities,counties) {
-		var html = "<div id='menu'><ul><li><h2>County<\/h2><ul>";
+		//var html = "<div class=\"notes\"><p><em>Click on your city/county, from the list, to see the service indicators in your city/county!<\/em><\/p><\/div>";
+		var html = "<div class='region'><ul><li><h2>County<\/h2><ul>";
+		html += "<div class='region'><ul>";
 		for(var i = 0; i < counties.length; i++) {
 			var county = counties[i];
 			var uname = county.label.replace(" ","-");
-			html += "<li><a href=\"#"+ uname +"\" onclick=\"javascript:setRegion('"+county.uri+"','"+county.label+"');return false;\">" + county.label + "<\/a><\/li>";
+			//html += "<li><a href=\"#"+ uname +"\" onclick=\"javascript:setRegion('"+county.uri+"','"+county.label+"');return false;\">" + county.label + "<\/a><\/li>";
+			html += "<li><a href=\"javascript:setRegion('"+county.uri+"','"+county.label+"');\">" + county.label + "<\/a><\/li>";
 		}
 		html += "<\/ul><\/li><\/ul><ul><li><h2>City<\/h2><ul>"
 		for(var i = 0; i < cities.length; i++) {
@@ -199,41 +138,35 @@
 			var uname = city.label.replace(" ","-");
 			html += "<li><a href=\"#" + uname + "\" onclick=\"javascript:setRegion('"+city.uri+"','"+city.label+"');return false;\">" + city.label + "<\/a><\/li>";
 		}
+		html += "<\/ul><div>";
+		$("#regions-content-holder").html(html);
 		
-		/*
-		for(var i = 0; i < counties.length; i++) {
-			var county = counties[i];
-			html += "<li><a href=\"javascript:setRegion('"+county.uri+"','"+county.label+"');\">" + county.label + "<\/a><\/li>";
-		}
-		html += "<\/ul><\/li><\/ul><ul><li><h2>City<\/h2><ul>"
-		for(var i = 0; i < cities.length; i++) {
-			var city = cities[i];
-			html += "<li><a href=\"javascript:setRegion('"+city.uri+"','"+city.label+"');\">" + city.label + "<\/a><\/li>";
-		}
-		*/
-		
-		html +="<\/ul><\/li><\/ul><ul><li><h2>&nbsp;<\/h2><\/li><\/ul><ul><li><a href='" + aboutLink + "' class='nivel1'>ABOUT</a><\/li><\/ul>" +							
-			   "<ul><li><a href='" + codeLink + "' target='_blank' class='nivel1'>CODE</a></li></ul><\/div>"							
-		$("#content-holder").html(html);
 	}
 
-	/** General purpose functions **/
-	function getUrlVars(specialChar) {
-		var thisURI = window.location.href;
+	/* Once the user has selected a region, we show the data for that region */
+	function setRegion(uri,label) {
+		locationName = label.trim();
+		locationURI = uri;
+		label = label.replace(" ","-");
+		var localAdd = window.location.href;
+		var cur_url = localAdd.indexOf("#");
+		if (cur_url!=-1) {
+			window.location.href = localAdd.substring(0,cur_url-1)
+		}
+		window.location.href = window.location.href + "#" + label;
+		$("#location-title-holder").html(locationName);
+		$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
 		
-		if (thisURI.indexOf(specialChar)==-1)
-			return "";
-		var vars = [], hash;
-		var hashes = window.location.href.split(specialChar);
+		switchLayers('results');
+				
+		loadThirdPartyData(locationURI,locationName);
 
-		if (hashes.length > 1)
-			return hashes[1];
-		return "";
+		calculatePositionOfRegionInIndicators(locationURI);
+		displayIndicators();
+		//loadIndicatorsHierarchy();				//TODO checkquery
 	}
-	
-	function switchLayers() {
-	}
-	
+
+
 	/** Functions related to the DBpedia **/
 	/** Function to build a query for a given City/County **/
 	function buildDBPediaQuery (name) {
@@ -277,6 +210,11 @@
 		var sparql = buildDBPediaQuery(name);
 		_URIbase = "http://dbpedia.org/sparql?query=";
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
+		
+		console.log("loadDBpediaData");
+		console.log(queryURLBase);	
+		
+		
 		var region = new Object;
 		$.ajax( {
 			dataType :'jsonp',
@@ -367,10 +305,14 @@
 	/** Function to load data from census for a given City/County (uri and name) **/	
 	function loadCensusData(uri,name) {
 		var sparql = buildCensusQuery(uri,name);
-		_URIbase = "http://data-gov.ie/sparql?query=";
+		_URIbase = queryServer; //"http://data-gov.ie/sparql?query=";
 		//console.log(sparql);
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
 		var region = new Object;
+		
+		console.log("loadCensusData");
+		console.log(queryURLBase);	
+
 		$.getJSON(queryURLBase, function(data, textStatus){
 		if(data.results) {
 			var rows = data.results.bindings;
@@ -395,241 +337,153 @@
 	/** Function to load data from external resources **/
 	function loadThirdPartyData(uri, name) {
 		loadDBpediaData(uri, name); //there are some problems now ...
-		//loadCensusData(uri,name);
+		loadCensusData(uri,name);
 	}
 	
-	
 	/** Functions related to the service indicators **/
-	
-	/** Function to load properties **/
-	function loadProperties(positions,willLoadRegions) {
-		$("#loading_container").html("<div style='margin:auto; width:300px;'> <center> <b>Loading</b><br><br> <img style='padding-left:7px; vertical-align:center; width: 40px;' src='img/ajax-loader.gif'/> </center>");
-	
-		_URIbase = "http://localhost:8890/sparql?query=";
-		// Generate the SPARQL request for retrieving the properties of 
-		// the specified location, i.e., indicators.  
-		var sparql = " PREFIX qb: <http://purl.org/linked-data/cube#>  " +
-					 " SELECT ?uri ?label" +
+	/* This function loads the whole set of triples 
+	   and generate an array of elements
+	   each element has ?prop ?proplabel ?geo ?geolabel ?val
+	*/
+	function loadIndicatorsObservations() {
+		_URIbase = queryServer;
+		var sparql = " PREFIX data: <http://stats.data-gov.ie/data/> " +
+					 " PREFIX qb: <http://purl.org/linked-data/cube#> " +
+					 " PREFIX dimension: <http://purl.org/linked-data/sdmx/2009/dimension#> " +
+					 " PREFIX property: <http://stats.data-gov.ie/property/> " +
+					 " PREFIX skos: <http://www.w3.org/2004/02/skos/core#>  " +
+					 " SELECT distinct ?prop ?proplabel ?geo ?geolabel ?val " +
 					 " WHERE { " +
-					 " ?uri a qb:MeasureProperty ." +
-					 " ?uri <http://www.w3.org/2000/01/rdf-schema#label> ?label ." +
-					 "} ORDER BY ?uri ";
-		// baseURI for executing the sparql query. 
+					 " GRAPH " + datasetGraph + " { " +
+					 " ?obs a qb:Observation . " +
+					 " ?obs dimension:refPeriod " + indicatorYearURI + "." +
+					 " ?obs property:geoArea ?geo . " + 
+					 " ?obs ?prop ?val . " +
+					 " ?prop a qb:MeasureProperty . " +
+					 " ?prop <http://www.w3.org/2000/01/rdf-schema#label> ?proplabel . " +
+					 " ?prop qb:concept ?concept . " +
+					 " ?concept skos:inScheme " + si2009Scheme  + " . " +
+					 " ?geo skos:prefLabel ?geolabel . " +
+					 " } } ";
 		var Url = _URIbase + escape(sparql) + "&format=json";
+		var len = 0;
+			
+		console.log("loadProperties");
+		console.log(Url);
 
 		// An ajax request that requests the above URI and parses the response. 
 		$.ajax( {
 			dataType :'jsonp',
 			jsonp :'callback',
 			url : Url,
-			error: function () {
-				alert('Error when accessing data');
+			error: function (jqXHR, textStatus, errorThrown) {
+				alert('Error when accessing data when loading the properties ' + textStatus);
 			},
 			success : function(json) {
-
 				if( json && 
 					json.results && 
 					json.results.bindings && 
 					json.results.bindings.length > 0) {
 					var bindings = json.results.bindings;
+					var localIndicators = [];
+					var localProps = [];
+					var localRegions = [];
+					var len = 0;
 					for (var i=0; i<bindings.length; i++) {
+						// in each row we have ?prop ?proplabel ?geo ?geolabel ?val
 						var row = bindings[i];
 						var property = new Object;
-						property.uri = row.uri.value;
-						property.label = row.label.value;
-						properties[i] = property;
+						property.prop = row.prop.value;
+						property.proplabel = row.proplabel.value;
+						property.geo = row.geo.value;
+						property.geolabel = row.geolabel.value;
+						property.val = row.val.value;
+						//remover the (administrative) from the label
+						index = property.geolabel.indexOf("(administrative)");
+						if (index != -1)
+							property.geolabel = property.geolabel.substring(0,index);
+						
+						localProps[property.prop] = property.proplabel;
+						localRegions[property.geo] = property.geolabel; //keep it just in case
+						localIndicators[len++] = property;
 					}
-					for (var i=0;i<properties.length; i++) {
-						calculatePosition(properties[i].uri,properties[i].label,i,willLoadRegions);
-					}
+					
+					processIndicatorsObservations(localIndicators,localProps);
+			
 				} 
-				// If we did not find any property
-				// resource, display an error message.  
+				// If we did not find any indicator
+				// display an error message.  
 				else {
 					$('#name_loading').html("");
 					var html = "<div id='missing'>No indicators were found. <\/div>";
 					$("#content-holder").html(html);
 				}
 			}
-		});
-	}	
-
-	/** Function to calculate the position of a given city in an indicatory 
-		propURI - property URI
-		propLabel - property label
-		locationURI - URI of the city/county
-		propertyIndex - index of the current property
-	**/	
-	function calculatePosition(propURI,propLabel,propertyIndex,willLoadRegions) {
-		_URIbase = "http://localhost:8890/sparql?query=";
-		position = 0;
-		
-		// Generate the SPARQL request for calculating the values per property
-		var sparql = " PREFIX data: <http://stats.data-gov.ie/data/>" +
-					 " PREFIX qb: <http://purl.org/linked-data/cube#> " +
-					 " PREFIX dimension: <http://purl.org/linked-data/sdmx/2009/dimension#> " +
-					 " PREFIX property: <http://stats.data-gov.ie/property/> " +
-					 " PREFIX skos: <http://www.w3.org/2004/02/skos/core#> " +
-					 " SELECT distinct ?val ?geo ?label " + 
-					 " WHERE { " + 
-					 " ?obs a qb:Observation . " +
-					 " ?obs dimension:refPeriod " +  indicatorYearURI + " ." +
-					 " ?obs property:geoArea ?geo . " +
-					 " ?geo skos:prefLabel ?label . " + 
-					 " ?obs <" + propURI + "> ?val . " +
-					 " } ORDER BY desc(?val)";
-		
-		// baseURI for executing the sparql query. 
-		var Url = _URIbase + escape(sparql) + "&format=json";
-
-		// An ajax request that requests the above URI and parses the response. 
-		$.ajax( {
-			dataType :'jsonp',
-			jsonp :'callback',
-			url : Url,
-			success : function(json) {
-				if( json && 
-					json.results && 
-					json.results.bindings && 
-					json.results.bindings.length > 0) {
-					var bindings = json.results.bindings;
-					var mean = 0;
-					var props = []
-					var len = 0;
-					for (var i=0; i<bindings.length; i++) {
-						var row = bindings[i];
-						if (row.val) {
-							var property = new Object();
-							property.val = row.val.value;
-							property.locURI = row.geo.value;
-							property.locLabel = row.label.value;
-							mean += parseFloat(property.val);
-							//Remove the administrative part from the region
-							var index = property.locLabel.indexOf("(administrative)");
-							if (index != -1)
-								property.locLabel = property.locLabel.substring(0,index);
-							property.label = propLabel;
-							/* do it later
-							if (property.locURI == locationURI) {
-								position = i+1;
-								value = property.val;
-							}*/
-							props[len++] = property;
-						}
-					}
-						//add the mean
-						mean = mean / bindings.length;
-						//console.log('indicator ' + propURI + ' media ' + mean);
-						
-						var meanProperty = new Object;
-						meanProperty.val = mean;
-						meanProperty.locURI = 'Average';
-						meanProperty.locLabel = 'Average';
-						props[len++] = meanProperty;
-						
-						props.sort( function (a,b) 
-						{ 
-							return parseFloat(b.val) - parseFloat(a.val);
-						} );
-
-					
-					indicators[propURI] = props;
-					/* do it later
-					if (position != 0) {
-						//console.log('property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
-						
-						var size = positions.length;
-						var pos = new Object();
-						pos.position = position;
-						pos.propURI = propURI;
-						pos.propLabel = propLabel;
-						positions[size] = pos;
-						//positions[propURI]=position;
-						
-						//order the array, including the  mean
-						props.sort( function (a,b) 
-						{ 
-							return parseFloat(b.val) - parseFloat(a.val);
-						} );
-			
-						
-						indicators[propURI] = props;
-					} */
-					
-					if (propertyIndex == properties.length -1) {
-						//selectPropertiesToDisplay();
-						if (willLoadRegions) {
-							loadRegions();
-							document.getElementById('loading_container').style.display='none';
-						}
-						else {
-							$("#location-title-holder").html(locationName);
-							$("#location-main-holder").html("<center><a href=\""+locationURI+"\" target=\"_blank\">" + locationName + "</a> <br><br><p class='subtitle'>Service indicators for " +indicatorYear + "<\/p><\/center>");
-							document.getElementById('result-container').style.display='block';
-							loadThirdPartyData(locationURI,locationName);
-							loadIndicators(locationURI);			
-							loadIndicatorsHierarchy();
-						}
-					}
-				} 
-			}
-		});
+		});					 
 	}
 
+	function processIndicatorsObservations(localIndicators,localProps) {
+		var mean = 0;
+		var len = 0;
+		for (var propURI in localProps) {
+			var props = []
+			mean = 0;
+			len = 0;
+			for (var j=0;j<localIndicators.length;j++) {
+				var property = localIndicators[j];
+				if (property.prop==propURI ) {
+					mean = mean + parseFloat(property.val);
+					var propertyGroupByURI = new Object();
+					propertyGroupByURI.prop = property.prop;
+					propertyGroupByURI.proplabel = property.proplabel;
+					propertyGroupByURI.geo = property.geo;
+					propertyGroupByURI.geolabel = property.geolabel;
+					propertyGroupByURI.val = property.val;
+					props[len++] = propertyGroupByURI;
+				}
+			}			
+			mean = mean / len;			//get mean for that property
+			var meanProperty = new Object();
+			meanProperty.prop = propURI;
+			meanProperty.proplabel = localProps[propURI];
+			meanProperty.geo = 'Average';
+			meanProperty.geolabel = 'Average';
+			meanProperty.val = mean;
+			props[len++] = meanProperty;
+			
+			props.sort( function (a,b) { 
+							return parseFloat(b.val) - parseFloat(a.val);
+						} );
+			
+			indicators[propURI] = props;
+		}
+	}
 	
-	function loadIndicators(locationURI) {
+	function calculatePositionOfRegionInIndicators(locationURI) {
 		var position;
-		for (var i in indicators) {
-			//console.log(i + ' ' + indicators[i]);
-			//console.log(indicators[i].lo
+		for (var propURI in indicators) {
 			position = 0;
-			var props = indicators[i];
+			var props = indicators[propURI];
 			for (var k=0;k<props.length;k++) {
 				var property = props[k];
-				if (property.locURI == locationURI) {
+				if (property.geo == locationURI) {
 					position = k+1;
-					value = property.val;
 				}
 			}
-			
 			if (position != 0) {
-				//console.log('property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
+				//console.log('----------------property ' + propURI + '\tvalue ' + value + '\tposition ' + position );
 				var size = positions.length;
 				var pos = new Object();
 				pos.position = position;
-				pos.propURI = i;
+				pos.propURI = propURI;
 				positions[size] = pos;
-				//positions[i] = pos;
-						/*
-						var size = positions.length;
-						var pos = new Object();
-						pos.position = position;
-						pos.propURI = propURI;
-						pos.propLabel = propLabel;
-						positions[size] = pos;
-						//positions[propURI]=position;
-						
-						//order the array, including the  mean
-						props.sort( function (a,b) 
-						{ 
-							return parseFloat(b.val) - parseFloat(a.val);
-						} );
-			
-						
-						indicators[propURI] = props;
-						*/
-				
 			} 
-		}
-		
-		selectPropertiesToDisplay();
-		
-		positions = [];
-		
+		}			
+
 	}
 	
-	/** Function to select the properties to display, two top properties, and two bottom properties **/	
-	function selectPropertiesToDisplay() {
+		/** Function to select the properties to display, two top properties, and two bottom properties **/	
+	function displayIndicators() {
 		//order the array
 		positions.sort( function (a,b) 
 			{ 
@@ -640,10 +494,8 @@
 		displayChartBottomProperty1(positions[1].propURI,positions[1].position,1);
 		displayChartBottomProperty2(positions[0].propURI,positions[0].position,2);		
 		
-		document.getElementById('result-container').style.display='block';
-		$('#loading_container').html("");
 	}
-	
+
 	/** Function to display a chart of a top property 
 		topProperty - the property to display
 		position - the position of the county/city for that property
@@ -655,27 +507,27 @@
 
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
-        data.addColumn('number', /*topProperty*/props[0].label);
-		data.addColumn('number', props[0].label);
-		data.addColumn('number', props[0].label);
+        data.addColumn('number', /*topProperty*/props[0].proplabel);
+		data.addColumn('number', props[0].proplabel);
+		data.addColumn('number', props[0].proplabel);
 		data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
-			data.setValue(i, 0, props[i].locLabel);
-			if (props[i].locURI == locationURI) 
+			data.setValue(i, 0, props[i].geolabel);
+			if (props[i].geo == locationURI) 
 				data.setValue(i, 3, parseFloat(props[i].val));			
-			else if (props[i].locURI == 'Average') 
+			else if (props[i].geo == 'Average') 
 				data.setValue(i, 2, parseFloat(props[i].val));
 			else
 				data.setValue(i, 1, parseFloat(props[i].val));
 		}
-
-		loadIndicatorParents(topProperty,'first-position-parents-description',props[0].label);
+		loadIndicatorParents(topProperty,'first-position-parents-description');
 		
 		$('#first-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
+		$('#first-position-description').html("<p class='position-description'>\t" + props[0].proplabel +"</p>");		
 		
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
-		barsVisualization.draw(data, {width: 900, height: 500, colors:['#736F6E','#382D2C','#306754'], legend:'top', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } }); //,  vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
+		barsVisualization.draw(data, {width: 900, height: 500, colors:['#736F6E','#382D2C','#306754'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } }); //,  vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
 	
 	}
 
@@ -690,25 +542,26 @@
 
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
-        data.addColumn('number', /*topProperty*/props[0].label);
-		data.addColumn('number', props[0].label);	
-		data.addColumn('number', props[0].label);		
+        data.addColumn('number', /*topProperty*/props[0].proplabel);
+		data.addColumn('number', props[0].proplabel);	
+		data.addColumn('number', props[0].proplabel);		
 		data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
-			data.setValue(i, 0, props[i].locLabel);
-			if (props[i].locURI == locationURI) 
+			data.setValue(i, 0, props[i].geolabel);
+			if (props[i].geo == locationURI) 
 				data.setValue(i, 3, parseFloat(props[i].val));			
-			else if (props[i].locURI == 'Average') 
+			else if (props[i].geo == 'Average') 
 				data.setValue(i, 2, parseFloat(props[i].val));
 			else
 				data.setValue(i, 1, parseFloat(props[i].val));
 		
 		}
 		
-		loadIndicatorParents(topProperty,'second-position-parents-description',props[0].label );
+		loadIndicatorParents(topProperty,'second-position-parents-description');
 
 		$('#second-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
+		$('#second-position-description').html("<p class='position-description'>\t" + props[0].proplabel +"</p>");		
 			
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_top_'+index));
 		barsVisualization.draw(data, {width: 900, height: 500, colors:['#736F6E','#382D2C','#306754'], legend:'none', isStacked:'true', backgroundColor: '#F7F7F7', hAxis:{textStyle: {color: "black", fontName: "sans-serif", fontSize: 13} } } ); //vAxis: {title:'hola', titleTextStyle:'', color: '#FF0000' }
@@ -726,25 +579,27 @@
 
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
-        data.addColumn('number', props[0].label);
-		data.addColumn('number', props[0].label);
-		data.addColumn('number', props[0].label);
+        data.addColumn('number', props[0].proplabel);
+		data.addColumn('number', props[0].proplabel);
+		data.addColumn('number', props[0].proplabel);
         data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
-			data.setValue(i, 0, props[i].locLabel);
-			if (props[i].locURI == locationURI) 
+			data.setValue(i, 0, props[i].geolabel);
+			if (props[i].geo == locationURI) 
 				data.setValue(i, 3, parseFloat(props[i].val));			
-			else if (props[i].locURI == 'Average') 
+			else if (props[i].geo == 'Average') 
 				data.setValue(i, 2, parseFloat(props[i].val));
 			else
 				data.setValue(i, 1, parseFloat(props[i].val));
 		
 		}
 	
-		loadIndicatorParents(bottomProperty,'first-last-position-parents-description',props[0].label );
+		loadIndicatorParents(bottomProperty,'first-last-position-parents-description');
 		
 		$('#first-last-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
+		$('#first-last-position-description').html("<p class='position-description'>\t" + props[0].proplabel +"</p>");		
+
 			
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_'+index));
 		barsVisualization.draw(data, {
@@ -771,17 +626,17 @@
 
 		var data = new google.visualization.DataTable();
         data.addColumn('string', 'Location');
-        data.addColumn('number', props[0].label);
-		data.addColumn('number', props[0].label);
-		data.addColumn('number', props[0].label);
+        data.addColumn('number', props[0].proplabel);
+		data.addColumn('number', props[0].proplabel);
+		data.addColumn('number', props[0].proplabel);
         data.addRows(props.length);
 
 		for (var i=0; i<props.length; i++) {
-			data.setValue(i, 0, props[i].locLabel);
+			data.setValue(i, 0, props[i].geolabel);
 			//data.setValue(i, 0, props[i].locURI);
-			if (props[i].locURI == locationURI) 
+			if (props[i].geo == locationURI) 
 				data.setValue(i, 3, parseFloat(props[i].val));			
-			else if (props[i].locURI == 'Average') 
+			else if (props[i].geo == 'Average') 
 				data.setValue(i, 2, parseFloat(props[i].val));
 			else
 				data.setValue(i, 1, parseFloat(props[i].val));
@@ -789,9 +644,10 @@
 
 		}
 		
-		loadIndicatorParents(bottomProperty,'second-last-position-parents-description',props[0].label );
+		loadIndicatorParents(bottomProperty,'second-last-position-parents-description');
 
 		$('#second-last-position').html("<p class='position'># " + position +"&nbsp;&nbsp;</p>");
+		$('#second-last-position-description').html("<p class='position-description'>" + props[0].proplabel +"</p>");		
 
 		var barsVisualization = new google.visualization.ColumnChart(document.getElementById('chart_div_bottom_'+index));
 		barsVisualization.draw(data, {
@@ -805,7 +661,6 @@
 			});
 	}
 	
-	
 	function buildIndicatorParentsQuery(indicatorURI) {
 		var query = " PREFIX qb: <http://purl.org/linked-data/cube#>  " +
 					" PREFIX skos: <http://www.w3.org/2004/02/skos/core#>  " +
@@ -813,16 +668,19 @@
 					" WHERE { " +
 					"<" + indicatorURI  + "> qb:concept ?concept . " +
 					" ?concept skos:broader ?supcon1 . " +
-					" ?supcon1 skos:altLabel ?supcon1label . " +
+					" ?concept skos:altLabel ?supcon1label . " +
 					" OPTIONAL { ?supcon1 skos:broader ?supcon2 .  " +
 					" ?supcon2 skos:altLabel ?supcon2label . " + 
 					"   } " +
 					" } ";		
+					
 		return query;
 	}
-		
-	function loadIndicatorParents (indicatorURI,divElement,indicatorLabel) {
-		_URIbase = "http://localhost:8890/sparql?query=";	
+
+
+	function loadIndicatorParents (indicatorURI,divElement) {
+
+		_URIbase = queryServer;	
 		var sparql = buildIndicatorParentsQuery(indicatorURI);
 		var queryURLBase = _URIbase + escape(sparql) + "&format=json";
 		$.ajax( {
@@ -842,37 +700,19 @@
 					for(var i=0; i<rows.length; i++) {
 						var row = rows[i];
 						var parent = new Object;
-						parent.second = row.supcon1label.value;
-						parent.first = row.supcon2label.value;						
+						parent.first = row.supcon1label.value;
+						parent.second = row.supcon2label.value;						
 						parents[i] = parent;
 					}
 					
 					if (parents.length>0) {
 						if (parents[0].second)
-							$('#'+divElement).html("<div class='indicator-description'><ul><li>" + parents[0].first +"<\/li><ul><li>"+parents[0].second+"<\/li>" +
-												  "<ul><li>"+ indicatorLabel +"<\/li><\/ul><\/ul><\/ul><\/div>");
+							$('#'+divElement).html("<ul><li><p class='position-top-description'>" + parents[0].second + "<\/p><\/li><ul><li><p class='position-top-description'>" +  parents[0].first +  "<\/p></li><\/ul><\/ul>");
 						else
-							$('#'+divElement).html("<div class='indicator-description'><ul><li>" + parents[0].first + "<\/li><ul><li>"+indicatorLabel +"<\/li><\/ul><\/ul><\/div>");
+							$('#'+divElement).html("<ul><li><p class='position-top-description'>" + parents[0].first + "<\/p><\/li><\/ul>");
 					}
 				}
 		}});		
 	}
-	
-	function loadIndicatorsHierarchy() {
-		
-	
-	}
-	
 
-
-	
-	
-	
-	
-	
-	
-	
-	
-
-	
 	

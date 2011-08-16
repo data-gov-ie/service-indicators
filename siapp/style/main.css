@@ -260,6 +260,26 @@ a:link{
 	text-decoration: none; 
 }
 
+.region ul { 
+  margin-left:1em; 
+  padding-left:0.2em; 
+  margin-bottom:1em;
+  font-size: 12px;
+}
+
+.region ul ul{ 
+  margin-left:1em; 
+  padding-left:0.2em; 
+  margin-bottom:1em;
+  font-size: 12px;
+}
+
+.region li {
+  padding-left: 0.1em; 
+  list-style: none;
+  list-style-position: inside;
+} 
+
 .indicator-description {
 	text-align: left;
 	vetical-align: top;
@@ -295,3 +315,6 @@ a:link{
   list-style: disc;
   list-style-position: inside;
 } 
+
+.notes p {
+}
