@@ -14,7 +14,7 @@
 	var topLevelInd = [];
 	var topLevel2Ind = [];	
 	
-	var aboutLink = "javascript:alert('Service Indicators of Ireland');";
+	var aboutLink = "javascript:alert('County Rank');";
 
 	var codeLink = "https://github.com/data-gov-ie/service-indicators";
 
@@ -26,11 +26,10 @@
 		var locParameterURI = getUrlVars('#'); //is there sth like #region-name?
 		
 		if (locParameterURI=="" && window.locationName == undefined) { //Access to the app from the first page - no parameteres
+			loadRegions();
 			loadIndicatorsObservations(false);
 			buildFirstPageSkeleton();
 			switchLayers('home');
-			loadRegions();
-			//alert('cuando me llamo <' + window.location.hash + '>');
 		}
 		else if (locParameterURI!="" && window.locationName == undefined) { //Access to the app asking for a uri of a particular county
 			$('#result-container').hide();
@@ -38,9 +37,6 @@
 			validateLocation(locParameterURI);
 			
 			loadIndicatorsObservations(true);
-					
-			
-
 		}
 	});
 	
