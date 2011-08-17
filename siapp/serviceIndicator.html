@@ -11,14 +11,16 @@
 
  <!-- google fonts -->
   <link href='http://fonts.googleapis.com/css?family=Tienne' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="style/main.css" type="text/css" media="all"/> 
+  <link rel="stylesheet" href="style/main.css" type="text/css" media="all"/>
+
+  <!-- simpletree test -->
+  <link rel="stylesheet" type="text/css" href="style/simpletree.css" />  
   
   <script type="text/javascript" src="http://www.google.com/jsapi"></script>
-    <!-- Note that you need to replace the key ABCDEF with your Maps API key. -->
-    <!-- Sign up for a Maps API key here: http://code.google.com/apis/maps/signup.html -->
+
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js" type="text/javascript"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.js" type="text/javascript"></script> 
-  <link href='http://fonts.googleapis.com/css?family=Redressed&v1' rel='stylesheet' type='text/css'>  
+  <link href='http://fonts.googleapis.com/css?family=Redressed&v1' rel='stylesheet' type='text/css'>
   <script type="text/javascript">
       google.load('visualization', '1',
           {'packages': ['table', 'map', 'corechart']});
@@ -30,9 +32,10 @@
 	
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js" type="text/javascript"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.js" type="text/javascript"></script> 
-  
+
+  <script type="text/javascript" src="lib/simpletreemenu.js"></script>
   <script type="text/javascript" src="lib/buildmap.js"></script>
- <script type="text/javascript" src="lib/indicator.js"></script>
+  <script type="text/javascript" src="lib/indicator.js"></script>
 
 
 
@@ -40,27 +43,26 @@
 </head>
 
 <body>
-<div id="first-page-holder">
-<div id="content-holder"> 
-</div>
+<div id="first-page-holder" width="100%">
+	<div id="content-holder"> 
+	</div>
+	<br>
+	<br>
+	<div id="title-content-holder"> 
+	</div>
+<br><br>
 
-<br>
-<div id="title-content-holder"> 
-</div>
-
-
-<div id="map-content-holder"> 
-</div>			
-<div id="regions-content-holder"> 
-</div>
+	<div id="map-content-holder"> 
+	</div>			
+	<div id="regions-content-holder"> 
+	</div>
 
 </div>
 
 <div id="loading_container">
 </div>
-<br>
-<br>
-<div id="result-container">
+
+<div id="result-container" style="width:100%">
 <h1 class="service-title"><div id="location-main-holder"/></h1>
 <br>
 
@@ -101,6 +103,10 @@
 					<td width="50%">
 						<div id="first-position-parents-description"></div>
 						<div id="first-position-description"></div>
+						<br><br>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #736F6E; float:left;">&nbsp;</div>&nbsp;All counties/cities&nbsp;&nbsp;</div>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #382D2C; float:left;">&nbsp;</div>&nbsp;Average&nbsp;&nbsp;</div>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #306754; float:left;">&nbsp;</div>&nbsp;Current County/City&nbsp;&nbsp;</div>
 					</td>
 				</tr>
 			</table>
@@ -114,6 +120,10 @@
 					<td width="50%">
 						<div id="second-position-parents-description"></div>
 						<div id="second-position-description"></div>
+						<br><br>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #736F6E; float:left;">&nbsp;</div>&nbsp;All counties/cities&nbsp;&nbsp;</div>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #382D2C; float:left;">&nbsp;</div>&nbsp;Average&nbsp;&nbsp;</div>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #306754; float:left;">&nbsp;</div>&nbsp;Current County/City&nbsp;&nbsp;</div>
 					</td>
 				</tr>
 			</table>
@@ -122,11 +132,11 @@
 	<tr>
 		<td width="50%">  
 		  <div id="chart_div_top_1"></div>
-		  <p align="center" style="font-family: 'Tienne', serif; font-size: 13px;">Place your mouse over each bar to get more information.</p>
+		  <p align="center" style="font-family: 'Tienne', serif; font-size: 14px;">Place your mouse over each bar to get more information.</p>
         </td>
 		<td width="50%">
 	      <div id="chart_div_top_2"></div>
-		  <p align="center" style="font-family: 'Tienne', serif; font-size: 13px;">Place your mouse over each bar to get more information.</p>
+		  <p align="center" style="font-family: 'Tienne', serif; font-size: 14px;">Place your mouse over each bar to get more information.</p>
 		</td>
 	</tr>
 	<tr>
@@ -170,10 +180,11 @@
 					</td>
 					<td width="60%">
 						<div id="first-last-position-parents-description"></div>
-						<div style="width: 15px; height: 15px; background: #736F6E;">&nbsp;</div>&nbsp;Current County&nbsp;&nbsp;
-						<div style="width: 15px; height: 15px; background: #382D2C;">&nbsp;</div>&nbsp;All counties&nbsp;&nbsp;
-						<div style="width: 15px; height: 15px; background: #7E2217;">&nbsp;</div>&nbsp;Average&nbsp;&nbsp;
 						<div id="first-last-position-description"></div>
+						<br><br>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #736F6E; float:left;">&nbsp;</div>&nbsp;All counties/cities&nbsp;&nbsp;</div>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #382D2C; float:left;">&nbsp;</div>&nbsp;Average&nbsp;&nbsp;</div>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #7E2217; float:left;">&nbsp;</div>&nbsp;Current County/City&nbsp;&nbsp;</div>
 					</td>
 				</tr>
 			</table>
@@ -187,22 +198,30 @@
 					<td width="60%">
 						<div id="second-last-position-parents-description"></div>					
 						<div id="second-last-position-description"></div>
+						<br><br>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #736F6E; float:left;">&nbsp;</div>&nbsp;All counties/cities&nbsp;&nbsp;</div>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #382D2C; float:left;">&nbsp;</div>&nbsp;Average&nbsp;&nbsp;</div>
+						<div style="float:left; font-family: 'Tienne', serif; font-size: 14px;"><div style="width: 15px; height: 15px; background: #7E2217; float:left;">&nbsp;</div>&nbsp;Current County/City&nbsp;&nbsp;</div>
 					</td>
 				</tr>
 			</table>
 		</td>
 	</tr>
 	<tr>
-		<td>  
+		<td>
 		  <div id="chart_div_bottom_1"></div>
-		  <p align="center" style="font-family: 'Tienne', serif; font-size: 13px;">Place your mouse over each bar to get more information.</p>
+		  <p align="center" style="font-family: 'Tienne', serif; font-size: 14px;">Place your mouse over each bar to get more information.</p>
         </td>
 		<td>
 	      <div id="chart_div_bottom_2"></div>
-		  <p align="center" style="font-family: 'Tienne', serif; font-size: 13px;">Place your mouse over each bar to get more information.</p>
+		  <p align="center" style="font-family: 'Tienne', serif; font-size: 14px;">Place your mouse over each bar to get more information.</p>
 		</td>
     </tr>
 </table> 
+<br>
+<br>
+<div id="indicator-list">
+</div>
 
 </div>
 

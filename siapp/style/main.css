@@ -1,10 +1,6 @@
 @import "reset.css";
 body, html {
-    -moz-background-clip: border;
-    -moz-background-inline-policy: continuous;
-    -moz-background-origin: padding;
     background: #F7F7F7 none repeat scroll 0 0;
-    #border-top: 3px solid #CCCCCC;
     font-family: helvetica,sans-serif;
     font-size: 16px;
     font-style: normal;
@@ -55,7 +51,7 @@ table.position td {
 	border-style: none;
 	border-color: #F7F7F7;
 	background-color: #F7F7F7;
-	width:%;
+	width:100%;
 	margin-right:15%;
 	margin-left:15%;
 	text-align:left;
@@ -84,68 +80,6 @@ table.chart td {
 	margin-right:0%;
 	margin-left:0%;
 	text-align:center;
-}
-
-#homesearch {
-    width: 700px;
-    margin: auto;
-}
-#homesearch .searchbox {
-    width: 700px;
-}
-#homesearch .searchbox input.text {
-    width: 640px;
-	font-size: 12px;
-}
-
-.searchbox select, .searchbox input.text, .searchbox textarea {
-    -moz-border-radius-bottomleft: 3px;
-    -moz-border-radius-bottomright: 3px;
-    -moz-border-radius-topleft: 3px;
-    -moz-border-radius-topright: 3px;
-    border: 1px solid #DDDDDD;
-    color: #333333;
-    font-size: 12px;
-    height: 20px;
-    line-height: 20px;
-    outline-color: -moz-use-text-color;
-    outline-style: none;
-    outline-width: medium;
-    padding: 0 20px;
-}
-.searchbox select {
-    margin-bottom: 10px;
-    padding: 0;
-    width: 200px;
-}
-.searchbox input.go {
-    -moz-background-clip: border;
-    -moz-background-inline-policy: continuous;
-    -moz-background-origin: padding;
-    #background: transparent url(go.png) no-repeat scroll 0 0;
-    border: medium none;
-    color: #FFFFFF;
-    display: block;
-    float: right;
-    font-size: 12px;
-    height: 20px;
-    line-height: 20px;
-    overflow: hidden;
-    text-align: center;
-    text-indent: -5000px;
-    text-shadow: -1px 1px 1px rgba(0, 0, 0, 0.2);
-    width: 48px;
-}
-.searchbox input.go:hover {
-    background-position: 0 -100px;
-    cursor: pointer;
-}
-.searchbox .plus {
-    color: #1495C1;
-    font-size: 12px;
-}
-.searchbox .plus:hover {
-    color: #FF8B12;
 }
 
 .ui-autocomplete {
@@ -317,4 +251,7 @@ a:link{
 } 
 
 .notes p {
+font-family: 'Tienne', sans-serif;
+font-size: 16px;
+background: #F7F7F7;
 }
