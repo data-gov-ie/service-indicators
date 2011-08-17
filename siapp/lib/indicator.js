@@ -27,9 +27,11 @@
 		
 		if (locParameterURI=="" && window.locationName == undefined) { //Access to the app from the first page - no parameteres
 			loadRegions();
+			
+			//loadIndicatorsObservationsFromFile();
 			loadIndicatorsObservations(false);
-			buildFirstPageSkeleton();
-			switchLayers('home');
+			//buildFirstPageSkeleton();
+			//switchLayers('home');
 		}
 		else if (locParameterURI!="" && window.locationName == undefined) { //Access to the app asking for a uri of a particular county
 			$('#result-container').hide();
@@ -456,6 +458,7 @@
 					json.results.bindings && 
 					json.results.bindings.length > 0) {
 					var bindings = json.results.bindings;
+					saveJSON(bindings);
 					var localIndicators = [];
 					var localProps = [];
 					var localRegions = [];
@@ -516,6 +519,17 @@
 			}
 		});					 
 	}
+	
+	
+	function loadIndicatorsObservationsFromFile() {
+
+		$.getJSON('../data/queryResults.json', function(data) {
+			alert('ok');
+		});
+
+	}
+	
+	
 
 	function processIndicatorsObservations(localIndicators,localProps,localRegions) {
 		var mean = 0;
