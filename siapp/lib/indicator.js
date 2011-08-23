@@ -846,34 +846,36 @@
 			var level = obj.level;
 			if (visible=='true') {
 				$('#'+div).show();
-				$('#'+div+'_img').html("<a href=\"javascript:setVisible('"+div+"','false');\"> <img src=\"img/collapse_icon.gif\" border=\"0\"/></a>");
+				if (level ==2)
+					$('#'+div+'_img').html("<a href=\"javascript:setVisible('"+div+"','false','"+ 3+ "');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a>");
 			}
 			else {
 				if (level == 3 || level == 2) {
 					$('#'+div).hide();
 					if (level ==2)
-					$('#'+div+'_img').html("<a href=\"javascript:setVisible('"+div+"','true');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a>");
+						$('#'+div+'_img').html("<a href=\"javascript:setVisible('"+div+"','true','"+ 3 + "');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a>");
 				}
 				else 
-					$('#'+div+'_img').html("<a href=\"javascript:setVisible('"+div+"','true');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a>");
+					$('#'+div+'_img').html("<a href=\"javascript:setVisible('"+div+"','true','"+ 2+ "');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a>");
 			}
 		}
 	}
 	
-	function setVisible(parent,visible) {
+	function setVisible(parent,visible,level) {
 		if (visible=='true')
-			$('#'+parent+'_img').html("<a href=\"javascript:setVisible('"+parent+"','false');\"> <img src=\"img/collapse_icon.gif\" border=\"0\"/></a>");
+			$('#'+parent+'_img').html("<a href=\"javascript:setVisible('"+parent+"','false','" + level + "');\"> <img src=\"img/collapse_icon.gif\" border=\"0\"/></a>");
 		else
-			$('#'+parent+'_img').html("<a href=\"javascript:setVisible('"+parent+"','true');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a>");
+			$('#'+parent+'_img').html("<a href=\"javascript:setVisible('"+parent+"','true', '" + level + "');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a>");
 			
 		for (var i=0;i<idsValues.length;i++) {
 			var obj = idsValues[i];
 			var div = obj.div;
+			var itemLevel = obj.level;
 			console.log('<'+div+'> <' + parent + '>');
-			if (div.indexOf(parent)!=-1 && div!=parent) {
+			if (div.indexOf(parent)!=-1 && div!=parent && itemLevel == level ) {
 				if (visible=='true') {
 					$('#'+div).show();
-					$('#'+div+'_img').html("<a href=\"javascript:setVisible('"+div+"','false');\"> <img src=\"img/collapse_icon.gif\" border=\"0\"/></a>");
+					$('#'+div+'_img').html("<a href=\"javascript:setVisible('"+div+"','false','"+ level +"');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a>");
 				}
 				else {
 					$('#'+div).hide();
@@ -900,12 +902,12 @@
 		for (var m in topLevelInd) {
 			var obj_list = topLevelInd[m];
 			divId = parse(m);	
-			html += "<tr id=\""+ divId +"\"style=\"background: #A9D0F5; color: #151515\"><td><div id=\""+ divId + "_img\"><a href=\"javascript:setVisible('"+divId+"','true');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a></div></td> <td>" + m + "</td> <td>-</td> <td><div id=\""+ divId +"_rank\"></div></td><td><div id=\""+ divId +"_bar\"></div> </td> </tr>";
+			html += "<tr id=\""+ divId +"\"style=\"background: #A9D0F5; color: #151515\"><td><div id=\""+ divId + "_img\"><a href=\"javascript:setVisible('"+divId+"','true','2');\"> <img src=\"img/expand_icon.gif\" border=\"0\"/></a></div></td> <td>" + m + "</td> <td>-</td> <td><div id=\""+ divId +"_rank\"></div></td><td><div id=\""+ divId +"_bar\"></div> </td> </tr>";
 			for (var k = 0; k < obj_list.length ;k++) {
 				var obj = obj_list[k];
 				divId = parse(m+obj.top2Label);
 				//html += "<tr id=\"" + divId + "\" style=\"background: #CEE3F6; color: #151515;\"><td><a href=\"\"><img src=\"img/expand_icon.gif\" border=\"0\"/></a></td> <td>" + obj.top2Label + "</td> <td>-</td> <td><div id=\""+ divId +"_rank\"></div> </td><td><div id=\""+ divId +"_bar\"></div> </td> </tr>";
-				html += "<tr id=\"" + divId + "\" style=\"background: #CEE3F6; color: #151515; display:none;\"><td><div id=\""+ divId + "_img\"><a href=\"javascript:setVisible('"+divId+"','false');\"><img src=\"img/collapse_icon.gif\" border=\"0\"/></a></div></td> <td>" + obj.top2Label + "</td> <td>-</td> <td><div id=\""+ divId +"_rank\"></div> </td><td><div id=\""+ divId +"_bar\"></div> </td> </tr>";				
+				html += "<tr id=\"" + divId + "\" style=\"background: #CEE3F6; color: #151515; display:none;\"><td><div id=\""+ divId + "_img\"><a href=\"javascript:setVisible('"+divId+"','false','3');\"><img src=\"img/expand_icon.gif\" border=\"0\"/></a></div></td> <td>" + obj.top2Label + "</td> <td>-</td> <td><div id=\""+ divId +"_rank\"></div> </td><td><div id=\""+ divId +"_bar\"></div> </td> </tr>";				
 				for (var i=0; i<positions.length; i++) {
 					var current = positions[i];
 					bar = "";
@@ -995,67 +997,5 @@
 		}
 	
 		showAllRows('false');
-		//ddtreemenu.createTree("treemenu1", true, 5);	
-	
-/*		var html = "<ul id=\"treemenu1\" class=\"treeview\">";
-		var color;
-		var size;
-		var bar = "";
-		var completeBar;
-		var mean = numRegions / 2;
-		for (var m in topLevelInd) {
-			var obj_list = topLevelInd[m];
-			html += "<li>" + m + "<ul >"
-			for (var k = 0; k < obj_list.length ;k++) {
-				var obj = obj_list[k];
-				html += "<li>" + obj.top2Label + "<ul >"				
-				for (var i=0; i<positions.length; i++) {
-					var current = positions[i];
-					bar = "";
-					if (current.top == obj.top1Label && current.parent == obj.top2Label) {
-						if (current.position > mean)
-							color = '#306754';
-						else
-							color = '#7E2217';
-						var presize = 300 * current.position / numRegions;
-						size = parseInt(presize);
-						//completeBar = "<div style=\"width: 15px; height: 15px; background:" + color + ";\">" + bar + "</div>";
-						completeBar = "<div style= 'background-color:" + color + "; height:10px; width:" + size +"px;' />" 
-						//console.log(completeBar);
-						html += "<li>" +  current.propLabel + ": " + current.val + "  " + completeBar +"</li>";
-					}
-				}
-				html += "</ul></li>"
-			}
-			html += "</ul></li>"
-		}
-		$('#indicator-list-container').html(html);
-		ddtreemenu.createTree("treemenu1", true, 5);
-*/
-
-		/*html += "<li>" + topLevelInd[m] + "<ul >"
-			for (var i=0; i<positions.length; i++) {
-				var current = positions[i];
-				bar = "";
-				if (current.top == topLevelInd[m]) {					
-					//console.log('current.position ' + current.position + ' mean ' + mean);
-					if (current.position > mean)
-						color = '#306754';
-					else
-						color = '#7E2217';
-					var presize = 300 * current.position / numRegions;
-					size = parseInt(presize);
-					//completeBar = "<div style=\"width: 15px; height: 15px; background:" + color + ";\">" + bar + "</div>";
-					completeBar = "<div style= 'background-color:" + color + "; height:10px; width:" + size +"px;' />" 
-					//console.log(completeBar);
-					html += "<li>" +  current.propLabel + ": " + current.val + "  " + completeBar +"</li>";
-				}
-			}
-			html += "</ul></li>"
-		}
-		html += "</ul>"
-		$('#indicator-list-container').html(html);
-		//ddtreemenu.createTree(treeid, enablepersist, opt_persist_in_days (default is 1))
-		ddtreemenu.createTree("treemenu1", true, 5);*/
 	}
 	
