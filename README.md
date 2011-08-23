@@ -1,4 +1,3 @@
 # Service Indicators app
 
-* siapp folder contains the application files, html, js, css, etc.
-* TO DO change direct access to data-gov.ie sparql
+The Service Indicator Application, a.k.a. County Rank, takes the data from the LMGA Ireland and displays the performance of the counties/cities.
