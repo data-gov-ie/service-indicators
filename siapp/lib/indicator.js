@@ -400,8 +400,8 @@
 	
 	/** Function to load data from external resources **/
 	function loadThirdPartyData(uri, name) {
-		//loadDBpediaData(uri, name); 
-		//loadCensusData(uri,name);
+		loadDBpediaData(uri, name); 
+		loadCensusData(uri,name);
 	}
 	
 	/** Functions related to the service indicators **/
