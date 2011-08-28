@@ -194,32 +194,47 @@ a:link{
 	text-decoration: none; 
 }
 
-.region ul { 
-  margin-left:1em; 
-  padding-left:0.2em; 
-  margin-bottom:1em;
-  font-size: 12px;
-  background: #F7F7F7;
-}
+/*
+.region { width:320px; font-family:Georgia, Times, serif; font-size:15px; float:left;}
+.region ul { list-style: none; }
+.region ul li { }
+.region ul li a { display:block; text-decoration:none; color:#000000; background-color:#FFFFFF; line-height:30px;
+  border-bottom-style:solid; border-bottom-width:1px; border-bottom-color:#CCCCCC; padding-left:10px; cursor:pointer; }
+.region ul li a:hover { color:#FFFFFF; background-image:url(../images/hover.png); background-repeat:repeat-x; }
+.region ul li a strong { margin-right:10px; }
+
+.region h2 {
+	text-align:center;
+	text-transform: uppercase;
+}*/
+
+.region { width:250px; font-family: 'Tienne', serif; font-size:14px; float:left;}
 
 .region h2 {
 	text-align:center;
 	text-transform: uppercase;
 }
 
-
-.region a:hover {
-	color: #000000;/*#a00;*/
-	#background: #8ABDE9; /*#D8D8D8;*/
-	#font-weight: bold;
-}
-
-
-.region ul ul{ 
-  margin-left:1em; 
+.region ul { 
+  /*margin-left:1em; 
   padding-left:0.2em; 
   margin-bottom:1em;
-  font-size: 12px;
+  font-size: 12px;*/
+  background: #F7F7F7;
+  list-style: none;
+}
+
+.region ul li { }
+.region ul li a { display:block; text-decoration:none; color:#030303; background-color: #F7F7F7; line-height:20px;
+  /*border-bottom-style:solid; border-bottom-width:1px; border-bottom-color:#CCCCCC;*/ padding-left:10px; cursor:pointer; }
+.region ul li a:hover { color:#000000; background: #FFFFFF; /*background-image:url(../img/hover.png); background-repeat:repeat-x;*/ }
+.region ul li a strong { margin-right:10px; }
+
+/*
+.region a:hover {
+	color: #000000; #a00;
+	#background: #8ABDE9; #D8D8D8;
+	#font-weight: bold;
 }
 
 .region li {
@@ -227,6 +242,7 @@ a:link{
   list-style: none;
   list-style-position: inside;
 } 
+*/
 
 .indicator-description {
 	text-align: left;
@@ -826,4 +842,12 @@ background: #F7F7F7;
 	width: 90%;
 	/*border: 3px coral solid;*/
 }
-
+/*
+#list4 { width:320px; font-family:Georgia, Times, serif; font-size:15px; }
+#list4 ul { list-style: none; }
+#list4 ul li { }
+#list4 ul li a { display:block; text-decoration:none; color:#000000; background-color:#FFFFFF; line-height:30px;
+  border-bottom-style:solid; border-bottom-width:1px; border-bottom-color:#CCCCCC; padding-left:10px; cursor:pointer; }
+#list4 ul li a:hover { color:#FFFFFF; background-image:url(../images/hover.png); background-repeat:repeat-x; }
+#list4 ul li a strong { margin-right:10px; }
+*/
